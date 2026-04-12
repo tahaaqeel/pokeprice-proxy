@@ -68,8 +68,8 @@
   .breakdown-bar{height:100%;border-radius:3px;background:var(--accent);transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
   .breakdown-score{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text);width:40px;text-align:right}
   .card-results{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-  .card-results-header{padding:14px 20px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:1px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px;gap:12px}
-  .card-result-row{padding:14px 20px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px;gap:12px;align-items:center;cursor:pointer;transition:background 0.15s}
+  .card-results-header{padding:14px 20px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:1px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 90px;gap:12px}
+  .card-result-row{padding:14px 20px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 90px;gap:12px;align-items:center;transition:background 0.15s}
   .card-result-row:hover{background:var(--surface2)}
   .card-result-row:last-child{border-bottom:none}
   .card-name{font-weight:500;font-size:0.9rem}
@@ -117,7 +117,6 @@
     <button class="tab" onclick="switchTab('model')">📐 Model Info</button>
   </div>
 
-  <!-- ANALYZE TAB -->
   <div id="tab-analyze">
     <div class="grid-2">
       <div class="panel">
@@ -166,7 +165,6 @@
         </div>
         <button class="btn" style="width:100%;margin-bottom:8px;padding:12px" onclick="fetchCard()">🔍 Fetch Card Data</button>
         <div id="fetchError" style="display:none" class="error-msg"></div>
-
         <div class="divider"></div>
         <div class="section-title">Pull Cost Score</div>
         <div class="formula-box"><strong>Pull Cost</strong> = Pull Rate × Cards in Rarity Slot<br><strong>Score</strong> = Normalized 1–10</div>
@@ -183,7 +181,6 @@
           <input type="number" id="cardsInSlotInput" placeholder="e.g. 11" min="1">
         </div>
         <button class="btn btn-ghost" style="width:100%;margin-bottom:4px" onclick="calcPullCost()">Calculate Pull Cost</button>
-
         <div class="divider"></div>
         <div class="section-title">Desirability Index</div>
         <div class="score-row">
@@ -214,19 +211,17 @@
         <div class="divider"></div>
         <button class="btn" style="width:100%;padding:14px" onclick="runModel()">⚡ Run Pricing Model</button>
       </div>
-
       <div class="result-panel" id="resultPanel">
         <div class="price-hero">
           <div class="empty-state">
             <div class="empty-icon">⚡</div>
-            <p>Search for a card above and select it,<br>then click Run Pricing Model.</p>
+            <p>Search for a card, select it from results,<br>then click Run Pricing Model.</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- BROWSE TAB -->
   <div id="tab-browse" style="display:none">
     <div style="display:flex;gap:12px;margin-bottom:24px;align-items:flex-end;flex-wrap:wrap">
       <div class="input-wrap" style="flex:1;min-width:220px;margin-bottom:0">
@@ -259,7 +254,6 @@
     </div>
   </div>
 
-  <!-- MODEL TAB -->
   <div id="tab-model" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div class="panel">
@@ -299,83 +293,38 @@
 </main>
 
 <script>
-// ── DATASET ───────────────────────────────────────────────
+window._searchResults = [];
+
 const PULL_RATES={
-  sv1:{name:'Scarlet & Violet Base',key:'sv1',ur:15,ir:13,sir:32,hr:54,urInSet:20,irInSet:24,sirInSet:10,hrInSet:6},
-  sv2:{name:'Paldea Evolved',key:'sv2',ur:15,ir:13,sir:32,hr:57,urInSet:26,irInSet:36,sirInSet:15,hrInSet:9},
-  sv3:{name:'Obsidian Flames',key:'sv3',ur:15,ir:13,sir:32,hr:52,urInSet:12,irInSet:12,sirInSet:6,hrInSet:3},
-  sv3pt5:{name:'151',key:'sv3pt5',ur:16,ir:12,sir:32,hr:51,urInSet:16,irInSet:16,sirInSet:7,hrInSet:3},
-  sv4:{name:'Paradox Rift',key:'sv4',ur:15,ir:14,sir:47,hr:82,urInSet:28,irInSet:33,sirInSet:15,hrInSet:7},
-  sv4pt5:{name:'Paldean Fates',key:'sv4pt5',ur:15,ir:14,sir:58,hr:62,urInSet:5,irInSet:3,sirInSet:8,hrInSet:7},
-  sv5:{name:'Temporal Forces',key:'sv5',ur:15,ir:13,sir:86,hr:146,urInSet:18,irInSet:23,sirInSet:10,hrInSet:6},
-  sv6:{name:'Twilight Masquerade',key:'sv6',ur:15,ir:13,sir:86,hr:146,urInSet:21,irInSet:21,sirInSet:11,hrInSet:6},
-  sv6pt5:{name:'Shrouded Fable',key:'sv6pt5',ur:15,ir:12,sir:67,hr:144,urInSet:10,irInSet:15,sirInSet:5,hrInSet:5},
-  sv7:{name:'Stellar Crown',key:'sv7',ur:15,ir:13,sir:90,hr:137,urInSet:11,irInSet:13,sirInSet:6,hrInSet:3},
-  sv8:{name:'Surging Sparks',key:'sv8',ur:14,ir:13,sir:87,hr:188,urInSet:20,irInSet:23,sirInSet:11,hrInSet:6},
-  sv8pt5:{name:'Prismatic Evolutions',key:'sv8pt5',ur:13,ir:null,sir:45,hr:180,urInSet:12,irInSet:null,sirInSet:32,hrInSet:5},
-  sv9:{name:'Journey Together',key:'sv9',ur:15,ir:12,sir:86,hr:137,urInSet:11,irInSet:11,sirInSet:6,hrInSet:3},
-  sv10:{name:'Destined Rivals',key:'sv10',ur:16,ir:12,sir:94,hr:149,urInSet:21,irInSet:23,sirInSet:11,hrInSet:6}
+  sv1:{name:'Scarlet & Violet Base',ur:15,ir:13,sir:32,hr:54,urInSet:20,irInSet:24,sirInSet:10,hrInSet:6},
+  sv2:{name:'Paldea Evolved',ur:15,ir:13,sir:32,hr:57,urInSet:26,irInSet:36,sirInSet:15,hrInSet:9},
+  sv3:{name:'Obsidian Flames',ur:15,ir:13,sir:32,hr:52,urInSet:12,irInSet:12,sirInSet:6,hrInSet:3},
+  sv3pt5:{name:'151',ur:16,ir:12,sir:32,hr:51,urInSet:16,irInSet:16,sirInSet:7,hrInSet:3},
+  sv4:{name:'Paradox Rift',ur:15,ir:14,sir:47,hr:82,urInSet:28,irInSet:33,sirInSet:15,hrInSet:7},
+  sv4pt5:{name:'Paldean Fates',ur:15,ir:14,sir:58,hr:62,urInSet:5,irInSet:3,sirInSet:8,hrInSet:7},
+  sv5:{name:'Temporal Forces',ur:15,ir:13,sir:86,hr:146,urInSet:18,irInSet:23,sirInSet:10,hrInSet:6},
+  sv6:{name:'Twilight Masquerade',ur:15,ir:13,sir:86,hr:146,urInSet:21,irInSet:21,sirInSet:11,hrInSet:6},
+  sv6pt5:{name:'Shrouded Fable',ur:15,ir:12,sir:67,hr:144,urInSet:10,irInSet:15,sirInSet:5,hrInSet:5},
+  sv7:{name:'Stellar Crown',ur:15,ir:13,sir:90,hr:137,urInSet:11,irInSet:13,sirInSet:6,hrInSet:3},
+  sv8:{name:'Surging Sparks',ur:14,ir:13,sir:87,hr:188,urInSet:20,irInSet:23,sirInSet:11,hrInSet:6},
+  sv8pt5:{name:'Prismatic Evolutions',ur:13,ir:null,sir:45,hr:180,urInSet:12,irInSet:null,sirInSet:32,hrInSet:5},
+  sv9:{name:'Journey Together',ur:15,ir:12,sir:86,hr:137,urInSet:11,irInSet:11,sirInSet:6,hrInSet:3},
+  sv10:{name:'Destined Rivals',ur:16,ir:12,sir:94,hr:149,urInSet:21,irInSet:23,sirInSet:11,hrInSet:6}
 };
 
 const CHAR_PREMIUM={charizard:10,umbreon:9.5,mew:9,pikachu:8.5,mewtwo:8,eevee:7.5,gengar:7,dragonite:6.5,rayquaza:6,lugia:6,gardevoir:5.5,snorlax:5,sylveon:5,espeon:5,leafeon:4.5,flareon:4.5,vaporeon:4.5,jolteon:4.5,glaceon:4.5,gyarados:4,arcanine:4,blastoise:4,venusaur:3.5,alakazam:3.5};
 
-// ── MATH ──────────────────────────────────────────────────
 function calcPullCostScore(r,c){const a=r*c;return{avgPacks:a,score:Math.round(Math.min(10,Math.max(1,a/200))*10)/10}}
 function calcDesirability(c,a,u){return Math.round((c*0.45+a*0.45+u*0.10)*10)/10}
 function calcModelPrice(p,d){return Math.exp(2.1+0.19*p+0.41*d)}
 function getVerdict(pred,actual){const d=(actual-pred)/pred;if(d>0.25)return{text:'🔴 Overvalued',cls:'verdict-over',diff:d};if(d<-0.20)return{text:'🟢 Undervalued',cls:'verdict-under',diff:d};return{text:'✅ Fairly Valued',cls:'verdict-fair',diff:d}}
+function getRarityTag(r){if(!r)return'';const l=r.toLowerCase();if(l.includes('special illustration'))return'<span class="tag tag-sir">SIR</span>';if(l.includes('hyper'))return'<span class="tag tag-hr">HR</span>';if(l.includes('illustration rare'))return'<span class="tag tag-ir">IR</span>';if(l.includes('ultra rare'))return'<span class="tag tag-ur">UR</span>';if(l.includes('double'))return'<span class="tag tag-other">DR</span>';return'<span class="tag tag-other">'+r.substring(0,10)+'</span>'}
+function getCharScore(n){const l=(n||'').toLowerCase();for(const[c,s]of Object.entries(CHAR_PREMIUM))if(l.includes(c))return s;return 5}
+function updateDesirability(){const c=+document.getElementById('charSlider').value,a=+document.getElementById('artSlider').value,u=+document.getElementById('appealSlider').value;document.getElementById('desirabilityDisplay').textContent=calcDesirability(c,a,u).toFixed(1)}
+function calcPullCost(){const r=parseFloat(document.getElementById('pullRateInput').value),c=parseFloat(document.getElementById('cardsInSlotInput').value);if(!r||!c){alert('Enter both values.');return}const{avgPacks,score}=calcPullCostScore(r,c);document.getElementById('packsDisplay').textContent=Math.round(avgPacks).toLocaleString();document.getElementById('pullScoreDisplay').textContent=score.toFixed(1)}
+function autoFillPullData(sk,ry){const s=PULL_RATES[sk];if(!s)return;const m={SIR:{rate:s.sir,inSet:s.sirInSet},IR:{rate:s.ir,inSet:s.irInSet},HR:{rate:s.hr,inSet:s.hrInSet},UR:{rate:s.ur,inSet:s.urInSet}};const d=m[ry];if(d&&d.rate&&d.inSet){document.getElementById('pullRateInput').value=d.rate;document.getElementById('cardsInSlotInput').value=d.inSet;calcPullCost()}}
+function switchTab(t){['analyze','browse','model'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['analyze','browse','model'][i]===t))}
 
-function getRarityTag(r){
-  if(!r)return'';
-  const l=r.toLowerCase();
-  if(l.includes('special illustration'))return'<span class="tag tag-sir">SIR</span>';
-  if(l.includes('hyper'))return'<span class="tag tag-hr">HR</span>';
-  if(l.includes('illustration rare'))return'<span class="tag tag-ir">IR</span>';
-  if(l.includes('ultra rare'))return'<span class="tag tag-ur">UR</span>';
-  if(l.includes('double'))return'<span class="tag tag-other">DR</span>';
-  return`<span class="tag tag-other">${r.length>12?r.substring(0,12)+'…':r}</span>`;
-}
-
-function getCharScore(n){
-  const l=(n||'').toLowerCase();
-  for(const[c,s]of Object.entries(CHAR_PREMIUM))if(l.includes(c))return s;
-  return 5;
-}
-
-// ── UI HELPERS ────────────────────────────────────────────
-function updateDesirability(){
-  const c=+document.getElementById('charSlider').value;
-  const a=+document.getElementById('artSlider').value;
-  const u=+document.getElementById('appealSlider').value;
-  document.getElementById('desirabilityDisplay').textContent=calcDesirability(c,a,u).toFixed(1);
-}
-
-function calcPullCost(){
-  const r=parseFloat(document.getElementById('pullRateInput').value);
-  const c=parseFloat(document.getElementById('cardsInSlotInput').value);
-  if(!r||!c){alert('Enter both values.');return}
-  const{avgPacks,score}=calcPullCostScore(r,c);
-  document.getElementById('packsDisplay').textContent=Math.round(avgPacks).toLocaleString();
-  document.getElementById('pullScoreDisplay').textContent=score.toFixed(1);
-}
-
-function autoFillPullData(sk,ry){
-  const s=PULL_RATES[sk];if(!s)return;
-  const m={SIR:{rate:s.sir,inSet:s.sirInSet},IR:{rate:s.ir,inSet:s.irInSet},HR:{rate:s.hr,inSet:s.hrInSet},UR:{rate:s.ur,inSet:s.urInSet}};
-  const d=m[ry];
-  if(d&&d.rate&&d.inSet){
-    document.getElementById('pullRateInput').value=d.rate;
-    document.getElementById('cardsInSlotInput').value=d.inSet;
-    calcPullCost();
-  }
-}
-
-function switchTab(t){
-  ['analyze','browse','model'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');
-  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['analyze','browse','model'][i]===t));
-}
-
-// ── API ───────────────────────────────────────────────────
 async function apiCall(endpoint,params={}){
   const qs=new URLSearchParams({endpoint,...params}).toString();
   const res=await fetch('/api/proxy?'+qs);
@@ -389,95 +338,54 @@ async function testConnection(){
     if(d&&(d.data||d.cards||Array.isArray(d))){
       document.getElementById('statusDot').className='status-dot connected';
       document.getElementById('statusText').textContent='Connected — live prices active ✓';
-    } else throw new Error('Bad response');
+    }else throw new Error('Bad response');
   }catch(e){
     document.getElementById('statusDot').className='status-dot error';
     document.getElementById('statusText').textContent='API error: '+e.message;
   }
 }
 
-// ── FETCH CARD ────────────────────────────────────────────
 async function fetchCard(){
   const name=document.getElementById('cardSearch').value.trim();
   const sk=document.getElementById('setSelect').value;
   const ry=document.getElementById('raritySelect').value;
   const errEl=document.getElementById('fetchError');
   errEl.style.display='none';
-
   if(!name){errEl.textContent='Please enter a card name.';errEl.style.display='block';return}
-
-  // Auto fill pull data if set+rarity selected
   if(sk&&ry)autoFillPullData(sk,ry);
-
-  // Auto suggest char premium
   const cs=getCharScore(name);
   document.getElementById('charSlider').value=cs;
   document.getElementById('charScore').textContent=cs;
   updateDesirability();
-
   const rp=document.getElementById('resultPanel');
   rp.innerHTML='<div class="price-hero"><div class="loading"><div class="spinner"></div>Fetching cards...</div></div>';
-
   try{
-    // Search by name only — we filter client side for reliability
     const data=await apiCall('cards',{per_page:30,page:1,sort:'relevance',name});
     let cards=data.data||data.cards||(Array.isArray(data)?data:[]);
-
-    // Client-side set filter
     if(sk&&PULL_RATES[sk]){
       const setName=PULL_RATES[sk].name.toLowerCase();
-      cards=cards.filter(c=>{
-        const ep=(c.set?.name||c.episode?.name||c.expansion?.name||'').toLowerCase();
-        return ep===setName||ep.includes(setName)||setName.includes(ep);
-      });
+      cards=cards.filter(c=>{const ep=(c.set?.name||c.episode?.name||c.expansion?.name||'').toLowerCase();return ep===setName||ep.includes(setName)||setName.includes(ep)});
     }
-
-    // Client-side rarity filter
     if(ry){
-      const rarityKeywords={SIR:'special illustration',IR:'illustration rare',HR:'hyper',UR:'ultra rare'};
-      const kw=rarityKeywords[ry]||ry.toLowerCase();
+      const rk={SIR:'special illustration',IR:'illustration rare',HR:'hyper',UR:'ultra rare'};
+      const kw=rk[ry]||ry.toLowerCase();
       cards=cards.filter(c=>(c.rarity||'').toLowerCase().includes(kw));
     }
-
-    if(!cards.length){
-      rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">🔍</div><p>No cards found matching your filters.<br><small style="opacity:0.6">Try removing the set or rarity filter.</small></p></div></div>';
-      return;
-    }
-
+    if(!cards.length){rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">🔍</div><p>No cards found matching your filters.<br><small style="opacity:0.6">Try removing the set or rarity filter.</small></p></div></div>';return}
     window._searchResults=cards.slice(0,15);
-rp.innerHTML=`
-  <div class="card-results fade-up">
-    <div class="card-results-header">
-      <div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div>
-    </div>
-    ${window._searchResults.map((card,i)=>{
-      const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
-      const setLabel=card.set?.name||card.episode?.name||card.expansion?.name||'—';
-      return`<div class="card-result-row">
-        <div><div class="card-name">${card.name||'—'}</div><div class="card-set-label">${card.number?'#'+card.number:''}</div></div>
-        <div style="font-size:0.8rem;color:var(--muted)">${setLabel}</div>
-        <div>${getRarityTag(card.rarity)}</div>
-        <div style="font-family:'DM Mono',monospace;color:var(--green);font-size:0.9rem">${price?'$'+parseFloat(price).toFixed(2):'—'}</div>
-        <div><button class="btn" style="padding:6px 12px;font-size:0.75rem" onclick="selectCard(${i})">Select</button></div>
-      </div>`;
-    }).join('')}
-  </div>`;
-        <div class="card-results-header">
-          <div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div>
-        </div>
-        ${cards.slice(0,15).map(card=>{
-          const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
-          const setLabel=card.set?.name||card.episode?.name||card.expansion?.name||'—';
-          window._cardCache=window._cardCache||{};window._cardCache[card.id||card.name]=card;
-return`<div class="card-result-row">
-            <div><div class="card-name">${card.name||'—'}</div><div class="card-set-label">${card.number?'#'+card.number:''}</div></div>
-            <div style="font-size:0.8rem;color:var(--muted)">${setLabel}</div>
-            <div>${getRarityTag(card.rarity)}</div>
-            <div style="font-family:'DM Mono',monospace;color:var(--green);font-size:0.9rem">${price?'$'+parseFloat(price).toFixed(2):'—'}</div>
-            <div><button class="btn" style="padding:6px 12px;font-size:0.75rem" onclick="selectCard(window._cardCache['${(card.id||card.name).replace(/'/g,"\'")}'])">Select</button></div>
-          </div>`;
-        }).join('')}
-      </div>`;
+    rp.innerHTML='<div class="card-results fade-up"><div class="card-results-header"><div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div></div>'+
+      window._searchResults.map(function(card,i){
+        const price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
+        const setLabel=(card.set&&card.set.name)?card.set.name:(card.episode&&card.episode.name)?card.episode.name:(card.expansion&&card.expansion.name)?card.expansion.name:'—';
+        return '<div class="card-result-row">'+
+          '<div><div class="card-name">'+(card.name||'—')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
+          '<div style="font-size:0.8rem;color:var(--muted)">'+setLabel+'</div>'+
+          '<div>'+getRarityTag(card.rarity)+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.9rem">'+(price?'$'+parseFloat(price).toFixed(2):'—')+'</div>'+
+          '<div><button class="btn" style="padding:6px 14px;font-size:0.78rem" onclick="selectCard('+i+')">Select</button></div>'+
+          '</div>';
+      }).join('')+
+    '</div>';
   }catch(e){
     errEl.textContent='API error: '+e.message;
     errEl.style.display='block';
@@ -485,197 +393,105 @@ return`<div class="card-result-row">
   }
 }
 
-// ── SELECT CARD ───────────────────────────────────────────
 function selectCard(i){
-  const card=typeof i==='number'?window._searchResults[i]:i;
-  if(!card){console.error('No card found at index',i);return;}
-  const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
-  const cs=getCharScore(card.name);
+  var card=window._searchResults[i];
+  if(!card){alert('Card not found. Please search again.');return}
+  var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
+  var cs=getCharScore(card.name);
   document.getElementById('charSlider').value=cs;
   document.getElementById('charScore').textContent=cs;
   updateDesirability();
   window._selectedCardPrice=price?parseFloat(price):null;
   window._selectedCardName=card.name;
-  const sk=document.getElementById('setSelect').value;
-  const ry=document.getElementById('raritySelect').value;
+  var sk=document.getElementById('setSelect').value;
+  var ry=document.getElementById('raritySelect').value;
   if(sk&&ry)autoFillPullData(sk,ry);
   runModel();
   document.getElementById('resultPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ── RUN MODEL ─────────────────────────────────────────────
 function runModel(){
-  const ps=parseFloat(document.getElementById('pullScoreDisplay').textContent)||5;
-  const ds=parseFloat(document.getElementById('desirabilityDisplay').textContent)||5;
-  const market=window._selectedCardPrice||null;
-  const name=window._selectedCardName||document.getElementById('cardSearch').value||'Card';
-  const pred=calcModelPrice(ps,ds);
-  const verdict=market?getVerdict(pred,market):null;
-  const c=+document.getElementById('charSlider').value;
-  const a=+document.getElementById('artSlider').value;
-  const u=+document.getElementById('appealSlider').value;
-
-  document.getElementById('resultPanel').innerHTML=`
-    <div class="price-hero fade-up">
-      <div class="price-hero-label">Model Predicted Price — ${name}</div>
-      <div class="price-hero-main">$${pred.toFixed(0)}</div>
-      <div class="price-hero-range">Confidence range: $${(pred*0.85).toFixed(0)} – $${(pred*1.15).toFixed(0)}</div>
-      <div class="verdict-row">
-        ${verdict
-          ?`<span class="verdict-badge ${verdict.cls}">${verdict.text}</span>
-            <span style="font-size:0.85rem;color:var(--muted)">Market: <strong style="color:var(--text)">$${market.toFixed(2)}</strong> &nbsp;·&nbsp; Diff: ${verdict.diff>0?'+':''}${(verdict.diff*100).toFixed(0)}%</span>`
-          :`<span class="verdict-badge verdict-fair">📊 Model Output</span>
-            <span style="font-size:0.85rem;color:var(--muted)">Enter market price below for verdict</span>`}
-      </div>
-    </div>
-
-    <div class="metrics-grid fade-up">
-      <div class="metric-card">
-        <div class="metric-label">Pull Cost Score</div>
-        <div class="metric-value" style="color:var(--accent)">${ps.toFixed(1)}</div>
-        <div class="metric-sub">+19% per point</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Desirability Score</div>
-        <div class="metric-value" style="color:var(--accent)">${ds.toFixed(1)}</div>
-        <div class="metric-sub">+41% per point</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Model R²</div>
-        <div class="metric-value" style="color:var(--green)">0.88</div>
-        <div class="metric-sub">88% variance explained</div>
-      </div>
-    </div>
-
-    <div class="breakdown-panel fade-up">
-      <div style="font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:20px">Desirability Breakdown</div>
-      <div class="breakdown-row">
-        <div class="breakdown-name">Character Premium <span style="color:var(--muted);font-size:0.7rem">(45%)</span></div>
-        <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${c*10}%"></div></div>
-        <div class="breakdown-score">${c}/10</div>
-      </div>
-      <div class="breakdown-row">
-        <div class="breakdown-name">Artwork & Hype <span style="color:var(--muted);font-size:0.7rem">(45%)</span></div>
-        <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${a*10}%;background:var(--accent2)"></div></div>
-        <div class="breakdown-score">${a}/10</div>
-      </div>
-      <div class="breakdown-row">
-        <div class="breakdown-name">Universal Appeal <span style="color:var(--muted);font-size:0.7rem">(10%)</span></div>
-        <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${u*10}%;background:#6495ed"></div></div>
-        <div class="breakdown-score">${u}/10</div>
-      </div>
-      <div class="divider"></div>
-      ${market
-        ?`<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px">
-            <span>Market Price</span><strong style="color:var(--text)">$${market.toFixed(2)}</strong>
-           </div>
-           <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)">
-            <span>Model Price</span><strong style="color:var(--accent)">$${pred.toFixed(2)}</strong>
-           </div>`
-        :`<div class="input-wrap">
-            <label>Enter Market Price for Verdict</label>
-            <div style="display:flex;gap:8px">
-              <input type="number" id="marketPriceInput" placeholder="e.g. 450"
-                style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1">
-              <button class="btn" onclick="applyMarketPrice()">Check</button>
-            </div>
-          </div>`}
-    </div>`;
+  var ps=parseFloat(document.getElementById('pullScoreDisplay').textContent)||5;
+  var ds=parseFloat(document.getElementById('desirabilityDisplay').textContent)||5;
+  var market=window._selectedCardPrice||null;
+  var name=window._selectedCardName||document.getElementById('cardSearch').value||'Card';
+  var pred=calcModelPrice(ps,ds);
+  var verdict=market?getVerdict(pred,market):null;
+  var c=+document.getElementById('charSlider').value;
+  var a=+document.getElementById('artSlider').value;
+  var u=+document.getElementById('appealSlider').value;
+  document.getElementById('resultPanel').innerHTML=
+    '<div class="price-hero fade-up">'+
+      '<div class="price-hero-label">Model Predicted Price — '+name+'</div>'+
+      '<div class="price-hero-main">$'+pred.toFixed(0)+'</div>'+
+      '<div class="price-hero-range">Confidence range: $'+(pred*0.85).toFixed(0)+' – $'+(pred*1.15).toFixed(0)+'</div>'+
+      '<div class="verdict-row">'+
+        (verdict
+          ?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+'</span><span style="font-size:0.85rem;color:var(--muted)">Market: <strong style="color:var(--text)">$'+market.toFixed(2)+'</strong> &nbsp;·&nbsp; Diff: '+(verdict.diff>0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>'
+          :'<span class="verdict-badge verdict-fair">📊 Model Output</span><span style="font-size:0.85rem;color:var(--muted)">Enter market price below for verdict</span>')+
+      '</div>'+
+    '</div>'+
+    '<div class="metrics-grid fade-up">'+
+      '<div class="metric-card"><div class="metric-label">Pull Cost Score</div><div class="metric-value" style="color:var(--accent)">'+ps.toFixed(1)+'</div><div class="metric-sub">+19% per point</div></div>'+
+      '<div class="metric-card"><div class="metric-label">Desirability Score</div><div class="metric-value" style="color:var(--accent)">'+ds.toFixed(1)+'</div><div class="metric-sub">+41% per point</div></div>'+
+      '<div class="metric-card"><div class="metric-label">Model R²</div><div class="metric-value" style="color:var(--green)">0.88</div><div class="metric-sub">88% variance explained</div></div>'+
+    '</div>'+
+    '<div class="breakdown-panel fade-up">'+
+      '<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:20px">Desirability Breakdown</div>'+
+      '<div class="breakdown-row"><div class="breakdown-name">Character Premium <span style="color:var(--muted);font-size:0.7rem">(45%)</span></div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+c*10+'%"></div></div><div class="breakdown-score">'+c+'/10</div></div>'+
+      '<div class="breakdown-row"><div class="breakdown-name">Artwork & Hype <span style="color:var(--muted);font-size:0.7rem">(45%)</span></div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+a*10+'%;background:var(--accent2)"></div></div><div class="breakdown-score">'+a+'/10</div></div>'+
+      '<div class="breakdown-row"><div class="breakdown-name">Universal Appeal <span style="color:var(--muted);font-size:0.7rem">(10%)</span></div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+u*10+'%;background:#6495ed"></div></div><div class="breakdown-score">'+u+'/10</div></div>'+
+      '<div class="divider"></div>'+
+      (market
+        ?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>Market Price</span><strong style="color:var(--text)">$'+market.toFixed(2)+'</strong></div><div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Model Price</span><strong style="color:var(--accent)">$'+pred.toFixed(2)+'</strong></div>'
+        :'<div class="input-wrap"><label>Enter Market Price for Verdict</label><div style="display:flex;gap:8px"><input type="number" id="marketPriceInput" placeholder="e.g. 450" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMarketPrice()">Check</button></div></div>')+
+    '</div>';
 }
 
-function applyMarketPrice(){
-  const mp=parseFloat(document.getElementById('marketPriceInput').value);
-  if(!mp)return;
-  window._selectedCardPrice=mp;
-  runModel();
-}
+function applyMarketPrice(){var mp=parseFloat(document.getElementById('marketPriceInput').value);if(!mp)return;window._selectedCardPrice=mp;runModel()}
 
-// ── BROWSE SET ────────────────────────────────────────────
 async function browseSet(){
-  const sk=document.getElementById('browseSetSelect').value;
+  var sk=document.getElementById('browseSetSelect').value;
   if(!sk){alert('Please select a set.');return}
-  const c=document.getElementById('browseResults');
+  var c=document.getElementById('browseResults');
   c.innerHTML='<div class="loading"><div class="spinner"></div>Loading set cards...</div>';
   try{
-    const sd=PULL_RATES[sk];
-    const data=await apiCall('cards',{per_page:50,page:1,sort:'number',episode:sd.name});
-    let cards=data.data||data.cards||(Array.isArray(data)?data:[]);
-
-    // Filter to chase cards only
-    cards=cards.filter(card=>{
-      const r=(card.rarity||'').toLowerCase();
-      return r.includes('illustration')||r.includes('hyper')||r.includes('ultra rare')||r.includes('special');
-    });
-
-    if(!cards.length){
-      c.innerHTML='<div class="empty-state"><p>No chase cards found for this set.</p></div>';
-      return;
-    }
-
-    c.innerHTML=`
-      <div class="card-results fade-up">
-        <div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:1px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px">
-          <div>CARD</div><div>RARITY</div><div>MARKET</div><div>MODEL</div><div>VERDICT</div>
-        </div>
-        ${cards.slice(0,25).map(card=>{
-          const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
-          const cs=getCharScore(card.name);
-          const r=(card.rarity||'').toLowerCase();
-          let pr=sd.sir||90,inSet=sd.sirInSet||10;
-          if(r.includes('hyper')){pr=sd.hr||150;inSet=sd.hrInSet||5}
-          else if(r.includes('illustration rare')&&!r.includes('special')){pr=sd.ir||13;inSet=sd.irInSet||20}
-          else if(r.includes('ultra rare')){pr=sd.ur||15;inSet=sd.urInSet||15}
-          const{score:ps}=calcPullCostScore(pr,inSet);
-          const ds=calcDesirability(cs,6,cs>7?8:5);
-          const mp=calcModelPrice(ps,ds);
-          const vrd=price?getVerdict(mp,parseFloat(price)):null;
-          return`<div class="card-result-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
-            <div><div class="card-name">${card.name||'—'}</div><div class="card-set-label">${card.number?'#'+card.number:''}</div></div>
-            <div>${getRarityTag(card.rarity)}</div>
-            <div style="font-family:'DM Mono',monospace;color:var(--green);font-size:0.88rem">${price?'$'+parseFloat(price).toFixed(2):'—'}</div>
-            <div style="font-family:'DM Mono',monospace;color:var(--accent);font-size:0.88rem">$${mp.toFixed(0)}</div>
-            <div>${vrd?`<span class="verdict-badge ${vrd.cls}" style="font-size:0.7rem;padding:4px 10px">${vrd.text}</span>`:'—'}</div>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }catch(e){
-    c.innerHTML=`<div class="error-msg">Error loading set: ${e.message}</div>`;
-  }
+    var sd=PULL_RATES[sk];
+    var data=await apiCall('cards',{per_page:50,page:1,sort:'number',episode:sd.name});
+    var cards=data.data||data.cards||(Array.isArray(data)?data:[]);
+    cards=cards.filter(function(card){var r=(card.rarity||'').toLowerCase();return r.includes('illustration')||r.includes('hyper')||r.includes('ultra rare')||r.includes('special')});
+    if(!cards.length){c.innerHTML='<div class="empty-state"><p>No chase cards found for this set.</p></div>';return}
+    c.innerHTML='<div class="card-results fade-up">'+
+      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:1px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>MARKET</div><div>MODEL</div><div>VERDICT</div></div>'+
+      cards.slice(0,25).map(function(card){
+        var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
+        var cs=getCharScore(card.name);
+        var r=(card.rarity||'').toLowerCase();
+        var pr=sd.sir||90,inSet=sd.sirInSet||10;
+        if(r.includes('hyper')){pr=sd.hr||150;inSet=sd.hrInSet||5}
+        else if(r.includes('illustration rare')&&!r.includes('special')){pr=sd.ir||13;inSet=sd.irInSet||20}
+        else if(r.includes('ultra rare')){pr=sd.ur||15;inSet=sd.urInSet||15}
+        var ps=calcPullCostScore(pr,inSet).score;
+        var ds=calcDesirability(cs,6,cs>7?8:5);
+        var mp=calcModelPrice(ps,ds);
+        var vrd=price?getVerdict(mp,parseFloat(price)):null;
+        return '<div class="card-result-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">'+
+          '<div><div class="card-name">'+(card.name||'—')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
+          '<div>'+getRarityTag(card.rarity)+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.88rem">'+(price?'$'+parseFloat(price).toFixed(2):'—')+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--accent);font-size:0.88rem">$'+mp.toFixed(0)+'</div>'+
+          '<div>'+(vrd?'<span class="verdict-badge '+vrd.cls+'" style="font-size:0.7rem;padding:4px 10px">'+vrd.text+'</span>':'—')+'</div>'+
+          '</div>';
+      }).join('')+
+    '</div>';
+  }catch(e){c.innerHTML='<div class="error-msg">Error: '+e.message+'</div>'}
 }
 
-// ── INIT ──────────────────────────────────────────────────
-function buildCharRef(){
-  document.getElementById('charRefList').innerHTML=
-    Object.entries(CHAR_PREMIUM).slice(0,12).map(([n,s])=>
-      `<div class="breakdown-row" style="margin-bottom:8px">
-        <div class="breakdown-name" style="color:var(--text);font-size:0.85rem;text-transform:capitalize">${n}</div>
-        <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${s*10}%"></div></div>
-        <div class="breakdown-score">${s}</div>
-      </div>`).join('');
-}
+function buildCharRef(){document.getElementById('charRefList').innerHTML=Object.entries(CHAR_PREMIUM).slice(0,12).map(function(e){return'<div class="breakdown-row" style="margin-bottom:8px"><div class="breakdown-name" style="color:var(--text);font-size:0.85rem;text-transform:capitalize">'+e[0]+'</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+e[1]*10+'%"></div></div><div class="breakdown-score">'+e[1]+'</div></div>'}).join('')}
+function buildPullTable(){document.getElementById('pullRateTable').innerHTML=Object.values(PULL_RATES).map(function(s){return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 12px;font-size:0.82rem">'+s.name+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.ur?'1/'+s.ur:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.ir?'1/'+s.ir:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.sir?'1/'+s.sir:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.hr?'1/'+s.hr:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.sirInSet||'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.irInSet||'—')+'</td></tr>'}).join('')}
 
-function buildPullTable(){
-  document.getElementById('pullRateTable').innerHTML=
-    Object.values(PULL_RATES).map(s=>
-      `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px 12px;font-size:0.82rem">${s.name}</td>
-        <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:0.78rem">${s.ur?'1/'+s.ur:'—'}</td>
-        <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:0.78rem">${s.ir?'1/'+s.ir:'—'}</td>
-        <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:0.78rem">${s.sir?'1/'+s.sir:'—'}</td>
-        <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:0.78rem">${s.hr?'1/'+s.hr:'—'}</td>
-        <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:0.78rem">${s.sirInSet||'—'}</td>
-        <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;font-size:0.78rem">${s.irInSet||'—'}</td>
-      </tr>`).join('');
-}
-
-document.getElementById('setSelect').addEventListener('change',()=>{
-  const s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;
-  if(s&&r)autoFillPullData(s,r);
-});
-document.getElementById('raritySelect').addEventListener('change',()=>{
-  const s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;
-  if(s&&r)autoFillPullData(s,r);
-});
+document.getElementById('setSelect').addEventListener('change',function(){var s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;if(s&&r)autoFillPullData(s,r)});
+document.getElementById('raritySelect').addEventListener('change',function(){var s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;if(s&&r)autoFillPullData(s,r)});
 
 buildCharRef();
 buildPullTable();
