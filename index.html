@@ -360,7 +360,8 @@ async function fetchCard(){
   const rp=document.getElementById('resultPanel');
   rp.innerHTML='<div class="price-hero"><div class="loading"><div class="spinner"></div>Fetching from API...</div></div>';
   try{
-    const data=await apiCall('cards',{per_page:10,page:1,sort:'relevance',name});
+    const setName=document.getElementById('setSelect').options[document.getElementById('setSelect').selectedIndex].text.split('—')[1]?.trim()||'';
+    const data=await apiCall('cards',{per_page:10,page:1,sort:'relevance',name,...(setName&&{episode:setName})});
     const cards=data.data||data.cards||data||[];
     if(!cards.length){rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">🔍</div><p>No cards found.</p></div></div>';return}
     rp.innerHTML=`<div class="card-results fade-up"><div class="card-results-header"><div>Card</div><div>Set</div><div>Rarity</div><div>Market Price</div><div></div></div>${cards.map(card=>{const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;return`<div class="card-result-row" onclick='selectCard(${JSON.stringify(card)})'><div><div class="card-name">${card.name||'—'}</div><div class="card-set">#${card.number||'?'}</div></div><div style="font-size:0.8rem;color:var(--muted)">${card.set?.name||card.episode?.name||'—'}</div><div>${getRarityTag(card.rarity)}</div><div style="font-family:'DM Mono',monospace;color:var(--green)">${price?'$'+parseFloat(price).toFixed(2):'—'}</div><div style="color:var(--muted);font-size:0.8rem">Select →</div></div>`}).join('')}</div>`;
