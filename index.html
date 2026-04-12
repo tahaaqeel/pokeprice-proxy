@@ -444,20 +444,37 @@ async function fetchCard(){
       return;
     }
 
-    rp.innerHTML=`
-      <div class="card-results fade-up">
+    window._searchResults=cards.slice(0,15);
+rp.innerHTML=`
+  <div class="card-results fade-up">
+    <div class="card-results-header">
+      <div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div>
+    </div>
+    ${window._searchResults.map((card,i)=>{
+      const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
+      const setLabel=card.set?.name||card.episode?.name||card.expansion?.name||'—';
+      return`<div class="card-result-row">
+        <div><div class="card-name">${card.name||'—'}</div><div class="card-set-label">${card.number?'#'+card.number:''}</div></div>
+        <div style="font-size:0.8rem;color:var(--muted)">${setLabel}</div>
+        <div>${getRarityTag(card.rarity)}</div>
+        <div style="font-family:'DM Mono',monospace;color:var(--green);font-size:0.9rem">${price?'$'+parseFloat(price).toFixed(2):'—'}</div>
+        <div><button class="btn" style="padding:6px 12px;font-size:0.75rem" onclick="selectCard(${i})">Select</button></div>
+      </div>`;
+    }).join('')}
+  </div>`;
         <div class="card-results-header">
           <div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div>
         </div>
         ${cards.slice(0,15).map(card=>{
           const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
           const setLabel=card.set?.name||card.episode?.name||card.expansion?.name||'—';
-          return`<div class="card-result-row" onclick="selectCard(${JSON.stringify(card).replace(/'/g,'&#39;')})">
+          window._cardCache=window._cardCache||{};window._cardCache[card.id||card.name]=card;
+return`<div class="card-result-row">
             <div><div class="card-name">${card.name||'—'}</div><div class="card-set-label">${card.number?'#'+card.number:''}</div></div>
             <div style="font-size:0.8rem;color:var(--muted)">${setLabel}</div>
             <div>${getRarityTag(card.rarity)}</div>
             <div style="font-family:'DM Mono',monospace;color:var(--green);font-size:0.9rem">${price?'$'+parseFloat(price).toFixed(2):'—'}</div>
-            <div><button class="btn" style="padding:6px 12px;font-size:0.75rem">Select</button></div>
+            <div><button class="btn" style="padding:6px 12px;font-size:0.75rem" onclick="selectCard(window._cardCache['${(card.id||card.name).replace(/'/g,"\'")}'])">Select</button></div>
           </div>`;
         }).join('')}
       </div>`;
@@ -469,7 +486,9 @@ async function fetchCard(){
 }
 
 // ── SELECT CARD ───────────────────────────────────────────
-function selectCard(card){
+function selectCard(i){
+  const card=typeof i==='number'?window._searchResults[i]:i;
+  if(!card){console.error('No card found at index',i);return;}
   const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;
   const cs=getCharScore(card.name);
   document.getElementById('charSlider').value=cs;
@@ -477,15 +496,10 @@ function selectCard(card){
   updateDesirability();
   window._selectedCardPrice=price?parseFloat(price):null;
   window._selectedCardName=card.name;
-  window._selectedCardSet=card.set?.name||card.episode?.name||'';
-
-  // Auto fill pull data from card set
   const sk=document.getElementById('setSelect').value;
   const ry=document.getElementById('raritySelect').value;
   if(sk&&ry)autoFillPullData(sk,ry);
-
   runModel();
-  // Scroll to results on mobile
   document.getElementById('resultPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
