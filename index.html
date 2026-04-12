@@ -345,8 +345,69 @@ async function testConnection(){
   }
 }
 
+const SET_NAME_MAP={
+  'sv1':'Scarlet & Violet','sv2':'Paldea Evolved','sv3':'Obsidian Flames',
+  'sv3pt5':'151','sv4':'Paradox Rift','sv4pt5':'Paldean Fates',
+  'sv5':'Temporal Forces','sv6':'Twilight Masquerade','sv6pt5':'Shrouded Fable',
+  'sv7':'Stellar Crown','sv8':'Surging Sparks','sv8pt5':'Prismatic Evolutions',
+  'sv9':'Journey Together','sv10':'Destined Rivals',
+  'swsh1':'Sword & Shield','sv7':'Evolving Skies',
+  'swsh9':'Brilliant Stars','swsh12pt5':'Crown Zenith'
+};
+
 async function fetchCard(){
   const name=document.getElementById('cardSearch').value.trim();
+  const sk=document.getElementById('setSelect').value;
+  const ry=document.getElementById('raritySelect').value;
+  const errEl=document.getElementById('fetchError');
+  errEl.style.display='none';
+  if(!name){errEl.textContent='Please enter a card name.';errEl.style.display='block';return}
+  if(sk&&ry)autoFillPullData(sk,ry);
+  const cs=getCharScore(name);
+  document.getElementById('charSlider').value=cs;
+  document.getElementById('charScore').textContent=cs;
+  updateDesirability();
+  const rp=document.getElementById('resultPanel');
+  rp.innerHTML='<div class="price-hero"><div class="loading"><div class="spinner"></div>Fetching from API...</div></div>';
+  try{
+    const params={per_page:20,page:1,sort:'relevance',name};
+    if(sk&&SET_NAME_MAP[sk])params.episode=SET_NAME_MAP[sk];
+    const data=await apiCall('cards',params);
+    let cards=data.data||data.cards||data||[];
+
+    // Filter client-side by set name if a set is selected
+    if(sk&&SET_NAME_MAP[sk]){
+      const setName=SET_NAME_MAP[sk].toLowerCase();
+      cards=cards.filter(c=>{
+        const ep=(c.set?.name||c.episode?.name||'').toLowerCase();
+        return ep.includes(setName)||setName.includes(ep);
+      });
+    }
+
+    // Filter by rarity if selected
+    if(ry){
+      const rarityMap={
+        'SIR':'special illustration',
+        'IR':'illustration rare',
+        'HR':'hyper rare',
+        'UR':'ultra rare'
+      };
+      cards=cards.filter(c=>{
+        const r=(c.rarity||'').toLowerCase();
+        return r.includes(rarityMap[ry]||ry.toLowerCase());
+      });
+    }
+
+    if(!cards.length){
+      rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">🔍</div><p>No cards found for that set and rarity.<br>Try broadening your search.</p></div></div>';
+      return;
+    }
+    rp.innerHTML=`<div class="card-results fade-up"><div class="card-results-header"><div>Card</div><div>Set</div><div>Rarity</div><div>Market Price</div><div></div></div>${cards.map(card=>{const price=card.prices?.tcg_player?.market_price||card.prices?.market||null;return`<div class="card-result-row" onclick='selectCard(${JSON.stringify(card)})'><div><div class="card-name">${card.name||'—'}</div><div class="card-set">#${card.number||'?'}</div></div><div style="font-size:0.8rem;color:var(--muted)">${card.set?.name||card.episode?.name||'—'}</div><div>${getRarityTag(card.rarity)}</div><div style="font-family:'DM Mono',monospace;color:var(--green)">${price?'$'+parseFloat(price).toFixed(2):'—'}</div><div style="color:var(--muted);font-size:0.8rem">Select →</div></div>`}).join('')}</div>`;
+  }catch(e){
+    errEl.textContent=`API error: ${e.message}`;errEl.style.display='block';
+    rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">⚡</div><p>Use the sliders to run the model manually.</p></div></div>';
+  }
+}  const name=document.getElementById('cardSearch').value.trim();
   const sk=document.getElementById('setSelect').value;
   const ry=document.getElementById('raritySelect').value;
   const errEl=document.getElementById('fetchError');
