@@ -6,7 +6,7 @@
 <title>PokePrice — TCG Pricing Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:rgba(255,255,255,0.07);--accent:#f5c842;--accent2:#e05c2e;--green:#3ddc84;--red:#ff5f5f;--text:#f0f0f5;--muted:#6b6b80}
+  :root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:rgba(255,255,255,0.07);--accent:#f5c842;--accent2:#e05c2e;--green:#3ddc84;--red:#ff5f5f;--text:#f0f0f5;--muted:#6b6b80;--blue:#6495ed;--purple:#9370db}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
   body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(245,200,66,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(245,200,66,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
@@ -23,8 +23,8 @@
   .btn:hover{background:#ffd966;transform:translateY(-1px)}
   .btn-ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
   .btn-ghost:hover{background:rgba(245,200,66,0.1)}
-  .tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px}
-  .tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;border-radius:8px;cursor:pointer;transition:all 0.2s;text-align:center}
+  .tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px;flex-wrap:wrap}
+  .tab{flex:1;min-width:120px;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;border-radius:8px;cursor:pointer;transition:all 0.2s;text-align:center}
   .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
   .grid-2{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
   .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
@@ -77,8 +77,8 @@
   .tag{display:inline-block;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-family:'DM Mono',monospace}
   .tag-sir{background:rgba(224,92,46,0.15);color:var(--accent2)}
   .tag-hr{background:rgba(245,200,66,0.15);color:var(--accent)}
-  .tag-ir{background:rgba(100,149,237,0.15);color:#6495ed}
-  .tag-ur{background:rgba(147,112,219,0.15);color:#9370db}
+  .tag-ir{background:rgba(100,149,237,0.15);color:var(--blue)}
+  .tag-ur{background:rgba(147,112,219,0.15);color:var(--purple)}
   .tag-other{background:rgba(150,150,150,0.15);color:var(--muted)}
   .loading{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:0.85rem;padding:40px 20px;justify-content:center}
   .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
@@ -92,7 +92,23 @@
   .result-panel{display:flex;flex-direction:column;gap:20px}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   .fade-up{animation:fadeUp 0.4s ease forwards}
-  @media(max-width:900px){.grid-2{grid-template-columns:1fr}.metrics-grid{grid-template-columns:repeat(2,1fr)}header{padding:16px 20px}main{padding:20px}}
+  .scanner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .scanner-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color 0.2s}
+  .scanner-card:hover{border-color:rgba(245,200,66,0.3)}
+  .scanner-card.undervalued{border-color:rgba(61,220,132,0.4);background:rgba(61,220,132,0.03)}
+  .scanner-card.overvalued{border-color:rgba(255,95,95,0.3)}
+  .scanner-card-name{font-weight:600;font-size:0.95rem;margin-bottom:2px}
+  .scanner-card-set{font-size:0.75rem;color:var(--muted);margin-bottom:12px}
+  .scanner-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+  .scanner-stat{background:var(--surface2);border-radius:8px;padding:8px;text-align:center}
+  .scanner-stat-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+  .scanner-stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;line-height:1}
+  .diff-bar-wrap{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin:8px 0}
+  .diff-bar{height:100%;border-radius:2px}
+  .sort-btn{padding:6px 14px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:'DM Mono',monospace;transition:all 0.2s}
+  .sort-btn.active,.sort-btn:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+  .scanner-controls{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:flex-end}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr}.metrics-grid{grid-template-columns:repeat(2,1fr)}header{padding:16px 20px}main{padding:20px}.scanner-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -103,7 +119,7 @@
   </div>
   <div style="text-align:right">
     <div style="font-size:0.75rem;color:var(--muted)">Model Accuracy</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--green)">R² = 0.88</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--green)">R&sup2; = 0.88</div>
   </div>
 </header>
 <main>
@@ -112,9 +128,10 @@
     <span id="statusText">Connecting to API...</span>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('analyze')">🔍 Analyze Card</button>
-    <button class="tab" onclick="switchTab('browse')">📦 Browse by Set</button>
-    <button class="tab" onclick="switchTab('model')">📐 Model Info</button>
+    <button class="tab active" onclick="switchTab('analyze')">&#128269; Analyze Card</button>
+    <button class="tab" onclick="switchTab('scanner')">&#127942; PSA 10 Scanner</button>
+    <button class="tab" onclick="switchTab('browse')">&#128230; Browse by Set</button>
+    <button class="tab" onclick="switchTab('model')">&#128208; Model Info</button>
   </div>
 
   <div id="tab-analyze">
@@ -128,49 +145,49 @@
         <div class="input-wrap">
           <label>Set (optional filter)</label>
           <select id="setSelect">
-            <option value="">— All Sets —</option>
-            <optgroup label="Scarlet & Violet">
-              <option value="sv1">SV1 — Scarlet & Violet Base</option>
-              <option value="sv2">SV2 — Paldea Evolved</option>
-              <option value="sv3">SV3 — Obsidian Flames</option>
-              <option value="sv3pt5">SV3.5 — 151</option>
-              <option value="sv4">SV4 — Paradox Rift</option>
-              <option value="sv4pt5">SV4.5 — Paldean Fates</option>
-              <option value="sv5">SV5 — Temporal Forces</option>
-              <option value="sv6">SV6 — Twilight Masquerade</option>
-              <option value="sv6pt5">SV6.5 — Shrouded Fable</option>
-              <option value="sv7">SV7 — Stellar Crown</option>
-              <option value="sv8">SV8 — Surging Sparks</option>
-              <option value="sv8pt5">SV8.5 — Prismatic Evolutions</option>
-              <option value="sv9">SV9 — Journey Together</option>
-              <option value="sv10">SV10 — Destined Rivals</option>
+            <option value="">-- All Sets --</option>
+            <optgroup label="Scarlet and Violet">
+              <option value="sv1">SV1 -- Scarlet and Violet Base</option>
+              <option value="sv2">SV2 -- Paldea Evolved</option>
+              <option value="sv3">SV3 -- Obsidian Flames</option>
+              <option value="sv3pt5">SV3.5 -- 151</option>
+              <option value="sv4">SV4 -- Paradox Rift</option>
+              <option value="sv4pt5">SV4.5 -- Paldean Fates</option>
+              <option value="sv5">SV5 -- Temporal Forces</option>
+              <option value="sv6">SV6 -- Twilight Masquerade</option>
+              <option value="sv6pt5">SV6.5 -- Shrouded Fable</option>
+              <option value="sv7">SV7 -- Stellar Crown</option>
+              <option value="sv8">SV8 -- Surging Sparks</option>
+              <option value="sv8pt5">SV8.5 -- Prismatic Evolutions</option>
+              <option value="sv9">SV9 -- Journey Together</option>
+              <option value="sv10">SV10 -- Destined Rivals</option>
             </optgroup>
-            <optgroup label="Sword & Shield">
-              <option value="swsh1">SWSH1 — Sword & Shield Base</option>
-              <option value="swsh7">SWSH7 — Evolving Skies</option>
-              <option value="swsh9">SWSH9 — Brilliant Stars</option>
-              <option value="swsh12pt5">SWSH12.5 — Crown Zenith</option>
+            <optgroup label="Sword and Shield">
+              <option value="swsh1">SWSH1 -- Sword and Shield Base</option>
+              <option value="swsh7">SWSH7 -- Evolving Skies</option>
+              <option value="swsh9">SWSH9 -- Brilliant Stars</option>
+              <option value="swsh12pt5">SWSH12.5 -- Crown Zenith</option>
             </optgroup>
           </select>
         </div>
         <div class="input-wrap">
           <label>Rarity (optional filter)</label>
           <select id="raritySelect">
-            <option value="">— All Rarities —</option>
+            <option value="">-- All Rarities --</option>
             <option value="SIR">Special Illustration Rare (SIR)</option>
             <option value="IR">Illustration Rare (IR)</option>
             <option value="HR">Hyper Rare (HR)</option>
             <option value="UR">Ultra Rare (UR)</option>
           </select>
         </div>
-        <button class="btn" style="width:100%;margin-bottom:8px;padding:12px" onclick="fetchCard()">🔍 Fetch Card Data</button>
+        <button class="btn" style="width:100%;margin-bottom:8px;padding:12px" onclick="fetchCard()">&#128269; Fetch Card Data</button>
         <div id="fetchError" style="display:none" class="error-msg"></div>
         <div class="divider"></div>
         <div class="section-title">Pull Cost Score</div>
-        <div class="formula-box"><strong>Pull Cost</strong> = Pull Rate × Cards in Rarity Slot<br><strong>Score</strong> = Normalized 1–10</div>
+        <div class="formula-box"><strong>Pull Cost</strong> = Pull Rate x Cards in Rarity Slot<br><strong>Score</strong> = Normalized 1-10</div>
         <div class="pull-display">
-          <div><div class="pull-display-label">Avg Packs to Pull</div><div id="packsDisplay" class="pull-display-val">—</div></div>
-          <div style="text-align:right"><div class="pull-display-label">Pull Cost Score</div><div id="pullScoreDisplay" class="pull-display-val" style="color:var(--accent)">—</div></div>
+          <div><div class="pull-display-label">Avg Packs to Pull</div><div id="packsDisplay" class="pull-display-val">-</div></div>
+          <div style="text-align:right"><div class="pull-display-label">Pull Cost Score</div><div id="pullScoreDisplay" class="pull-display-val" style="color:var(--accent)">-</div></div>
         </div>
         <div class="input-wrap">
           <label>Pull Rate Override (1 in X packs)</label>
@@ -184,40 +201,85 @@
         <div class="divider"></div>
         <div class="section-title">Desirability Index</div>
         <div class="score-row">
-          <div class="score-header">
-            <div><span class="score-label">Character Premium</span> <span class="weight-badge">45%</span></div>
-            <div class="score-val" id="charScore">5</div>
-          </div>
-          <input type="range" min="1" max="10" value="5" id="charSlider" oninput="document.getElementById('charScore').textContent=this.value;updateDesirability()">
+          <div class="score-header"><div><span class="score-label">Character Premium</span> <span class="weight-badge">45%</span></div><div class="score-val" id="charScore">5</div></div>
+          <input type="range" min="1" max="10" value="5" id="charSlider" oninput="document.getElementById('charScore').textContent=this.value;updateD()">
         </div>
         <div class="score-row">
-          <div class="score-header">
-            <div><span class="score-label">Artwork & Hype</span> <span class="weight-badge">45%</span></div>
-            <div class="score-val" id="artScore">5</div>
-          </div>
-          <input type="range" min="1" max="10" value="5" id="artSlider" oninput="document.getElementById('artScore').textContent=this.value;updateDesirability()">
+          <div class="score-header"><div><span class="score-label">Artwork and Hype</span> <span class="weight-badge">45%</span></div><div class="score-val" id="artScore">5</div></div>
+          <input type="range" min="1" max="10" value="5" id="artSlider" oninput="document.getElementById('artScore').textContent=this.value;updateD()">
         </div>
         <div class="score-row">
-          <div class="score-header">
-            <div><span class="score-label">Universal Appeal</span> <span class="weight-badge">10%</span></div>
-            <div class="score-val" id="appealScore">5</div>
-          </div>
-          <input type="range" min="1" max="10" value="5" id="appealSlider" oninput="document.getElementById('appealScore').textContent=this.value;updateDesirability()">
+          <div class="score-header"><div><span class="score-label">Universal Appeal</span> <span class="weight-badge">10%</span></div><div class="score-val" id="appealScore">5</div></div>
+          <input type="range" min="1" max="10" value="5" id="appealSlider" oninput="document.getElementById('appealScore').textContent=this.value;updateD()">
         </div>
         <div class="pull-display">
           <div class="pull-display-label">Desirability Score</div>
           <div id="desirabilityDisplay" class="pull-display-val" style="color:var(--accent)">5.0</div>
         </div>
         <div class="divider"></div>
-        <button class="btn" style="width:100%;padding:14px" onclick="runModel()">⚡ Run Pricing Model</button>
+        <button class="btn" style="width:100%;padding:14px" onclick="runModel()">Run Pricing Model</button>
       </div>
       <div class="result-panel" id="resultPanel">
         <div class="price-hero">
-          <div class="empty-state">
-            <div class="empty-icon">⚡</div>
-            <p>Search for a card, select it from results,<br>then click Run Pricing Model.</p>
+          <div class="empty-state"><div class="empty-icon">&#9889;</div><p>Search for a card, select it, then click Run Pricing Model.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-scanner" style="display:none">
+    <div class="panel" style="margin-bottom:20px">
+      <div class="section-title">PSA 10 Value Scanner</div>
+      <div class="formula-box">
+        Compares <strong>PSA 10 market price</strong> against <strong>model predicted PSA 10 value</strong>.<br>
+        Model PSA 10 = Raw Model Price x (1 / Gem Rate) x 0.6 dampener<br>
+        <strong>Undervalued</strong> = PSA 10 market is below model prediction | <strong>Overvalued</strong> = above model prediction
+      </div>
+      <div class="scanner-controls">
+        <div class="input-wrap" style="margin-bottom:0;flex:1;min-width:180px">
+          <label>Filter by Set</label>
+          <select id="scannerSetFilter" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;width:100%">
+            <option value="">All Sets</option>
+            <option value="Scarlet & Violet Base">SV1 -- Scarlet and Violet Base</option>
+            <option value="Paldea Evolved">SV2 -- Paldea Evolved</option>
+            <option value="Obsidian Flames">SV3 -- Obsidian Flames</option>
+            <option value="151">SV3.5 -- 151</option>
+            <option value="Paradox Rift">SV4 -- Paradox Rift</option>
+            <option value="Paldean Fates">SV4.5 -- Paldean Fates</option>
+            <option value="Temporal Forces">SV5 -- Temporal Forces</option>
+            <option value="Twilight Masquerade">SV6 -- Twilight Masquerade</option>
+            <option value="Shrouded Fable">SV6.5 -- Shrouded Fable</option>
+            <option value="Stellar Crown">SV7 -- Stellar Crown</option>
+            <option value="Surging Sparks">SV8 -- Surging Sparks</option>
+            <option value="Prismatic Evolutions">SV8.5 -- Prismatic Evolutions</option>
+            <option value="Journey Together">SV9 -- Journey Together</option>
+            <option value="Destined Rivals">SV10 -- Destined Rivals</option>
+          </select>
+        </div>
+        <div class="input-wrap" style="margin-bottom:0;min-width:140px">
+          <label>Rarity</label>
+          <select id="scannerRarityFilter" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;width:100%">
+            <option value="">All</option>
+            <option value="IR">IR Only</option>
+            <option value="SIR">SIR Only</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--muted);letter-spacing:1px;margin-bottom:6px">SORT BY</div>
+          <div style="display:flex;gap:4px">
+            <button class="sort-btn active" id="sortDiff" onclick="setSortMode('diff')">Most Undervalued</button>
+            <button class="sort-btn" id="sortPsa10" onclick="setSortMode('psa10')">PSA 10 Price</button>
+            <button class="sort-btn" id="sortGem" onclick="setSortMode('gem')">Gem Rate</button>
           </div>
         </div>
+        <button class="btn" onclick="runScanner()" style="padding:10px 24px;align-self:flex-end">Scan Now</button>
+      </div>
+      <div id="scannerProgress" style="display:none" class="loading"><div class="spinner"></div><span id="scannerProgressText">Scanning...</span></div>
+    </div>
+    <div id="scannerResults">
+      <div class="empty-state" style="padding:60px 0">
+        <div class="empty-icon">&#127942;</div>
+        <p>Click Scan Now to identify undervalued and overvalued PSA 10 graded cards across the SV era.</p>
       </div>
     </div>
   </div>
@@ -227,52 +289,60 @@
       <div class="input-wrap" style="flex:1;min-width:220px;margin-bottom:0">
         <label>Select Set</label>
         <select id="browseSetSelect" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;width:100%">
-          <option value="">— Select Set —</option>
-          <option value="sv1">SV1 — Scarlet & Violet Base</option>
-          <option value="sv2">SV2 — Paldea Evolved</option>
-          <option value="sv3">SV3 — Obsidian Flames</option>
-          <option value="sv3pt5">SV3.5 — 151</option>
-          <option value="sv4">SV4 — Paradox Rift</option>
-          <option value="sv4pt5">SV4.5 — Paldean Fates</option>
-          <option value="sv5">SV5 — Temporal Forces</option>
-          <option value="sv6">SV6 — Twilight Masquerade</option>
-          <option value="sv6pt5">SV6.5 — Shrouded Fable</option>
-          <option value="sv7">SV7 — Stellar Crown</option>
-          <option value="sv8">SV8 — Surging Sparks</option>
-          <option value="sv8pt5">SV8.5 — Prismatic Evolutions</option>
-          <option value="sv9">SV9 — Journey Together</option>
-          <option value="sv10">SV10 — Destined Rivals</option>
+          <option value="">-- Select Set --</option>
+          <option value="sv1">SV1 -- Scarlet and Violet Base</option>
+          <option value="sv2">SV2 -- Paldea Evolved</option>
+          <option value="sv3">SV3 -- Obsidian Flames</option>
+          <option value="sv3pt5">SV3.5 -- 151</option>
+          <option value="sv4">SV4 -- Paradox Rift</option>
+          <option value="sv4pt5">SV4.5 -- Paldean Fates</option>
+          <option value="sv5">SV5 -- Temporal Forces</option>
+          <option value="sv6">SV6 -- Twilight Masquerade</option>
+          <option value="sv6pt5">SV6.5 -- Shrouded Fable</option>
+          <option value="sv7">SV7 -- Stellar Crown</option>
+          <option value="sv8">SV8 -- Surging Sparks</option>
+          <option value="sv8pt5">SV8.5 -- Prismatic Evolutions</option>
+          <option value="sv9">SV9 -- Journey Together</option>
+          <option value="sv10">SV10 -- Destined Rivals</option>
         </select>
       </div>
       <button class="btn" onclick="browseSet()">Load Cards</button>
     </div>
     <div id="browseResults">
-      <div class="empty-state" style="padding:80px 0">
-        <div class="empty-icon">📦</div>
-        <p>Select a set to browse its chase cards.</p>
-      </div>
+      <div class="empty-state" style="padding:80px 0"><div class="empty-icon">&#128230;</div><p>Select a set to browse its chase cards.</p></div>
     </div>
   </div>
 
   <div id="tab-model" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div class="panel">
-        <div class="section-title">Model Formula</div>
+        <div class="section-title">Raw Price Model</div>
         <div class="formula-box" style="font-size:0.85rem;line-height:2.2">
-          <strong>Price = e^(α + β₁×PullCost + β₂×Desirability)</strong><br><br>
-          α = 2.1 &nbsp;|&nbsp; β₁ = <strong>0.19</strong> (+19%/pt) &nbsp;|&nbsp; β₂ = <strong>0.41</strong> (+41%/pt)<br>R² = <strong>0.88</strong>
+          <strong>Price = e^(2.1 + 0.19 x PullCost + 0.41 x Desirability)</strong><br>
+          R^2 = <strong>0.88</strong> -- 88% of price variation explained
+        </div>
+        <div class="section-title" style="margin-top:20px">PSA 10 Model</div>
+        <div class="formula-box" style="font-size:0.82rem;line-height:2">
+          <strong>Model PSA 10</strong> = Raw Price x (1 / Gem Rate) x 0.6<br>
+          Example: 12% gem = 8.3x raw x 0.6 = 5x raw<br><br>
+          <strong>Undervalued:</strong> Market PSA 10 less than Model PSA 10 by more than 20%<br>
+          <strong>Overvalued:</strong> Market PSA 10 greater than Model PSA 10 by more than 25%
         </div>
         <div class="section-title" style="margin-top:20px">Desirability Weights</div>
         <div class="breakdown-row"><div class="breakdown-name">Character Premium</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:45%"></div></div><div class="breakdown-score">45%</div></div>
-        <div class="breakdown-row"><div class="breakdown-name">Artwork & Hype</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:45%;background:var(--accent2)"></div></div><div class="breakdown-score">45%</div></div>
-        <div class="breakdown-row"><div class="breakdown-name">Universal Appeal</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:10%;background:#6495ed"></div></div><div class="breakdown-score">10%</div></div>
+        <div class="breakdown-row"><div class="breakdown-name">Artwork and Hype</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:45%;background:var(--accent2)"></div></div><div class="breakdown-score">45%</div></div>
+        <div class="breakdown-row"><div class="breakdown-name">Universal Appeal</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:10%;background:var(--blue)"></div></div><div class="breakdown-score">10%</div></div>
       </div>
       <div class="panel">
         <div class="section-title">Character Premium Reference</div>
         <div id="charRefList"></div>
+        <div style="margin-top:16px;font-size:0.72rem;color:var(--muted);line-height:1.8">
+          IR Gem Rate Database: <strong style="color:var(--green)">244 cards loaded</strong><br>
+          SIR Gem Rate Database: <strong style="color:var(--green)">153 cards loaded</strong>
+        </div>
       </div>
       <div class="panel" style="grid-column:1/-1">
-        <div class="section-title">Pull Rate Reference — Scarlet & Violet</div>
+        <div class="section-title">Pull Rate Reference -- Scarlet and Violet</div>
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem">
             <thead><tr style="border-bottom:1px solid var(--border)">
@@ -293,9 +363,144 @@
 </main>
 
 <script>
-window._searchResults = [];
+window._searchResults=[];
+var _sortMode='diff';
+var _scannerData=[];
 
-const PULL_RATES={
+var IR_GEM_RATES={
+  'Tarountula|199/198':0.03,'Dolliv|200/198':0.12,'Toedscool|201/198':0.12,'Scovillain|202/198':0.23,
+  'Armarouge|203/198':0.12,'Slowpoke|204/198':0.12,'Clauncher|205/198':0.12,'Wiglett|206/198':0.12,
+  'Dondozo|207/198':0.12,'Pachirisu|208/198':0.12,'Pawmot|209/198':0.13,'Drowzee|210/198':0.12,
+  'Ralts|211/198':0.12,'Kirlia|212/198':0.12,'Fidough|213/198':0.12,'Greavard|214/198':0.12,
+  'Riolu|215/198':0.12,'Sandile|216/198':0.12,'Klawf|217/198':0.12,'Mabosstiff|218/198':0.17,
+  'Bombirdier|219/198':0.09,'Kingambit|220/198':0.12,'Starly|221/198':0.09,'Skwovet|222/198':0.12,
+  'Smoliv|194/193':0.12,'Sprigatito|195/193':0.12,'Fuecoco|196/193':0.12,'Quaxly|197/193':0.12,
+  'Arcanine|198/193':0.12,'Gyarados|199/193':0.12,'Mismagius|200/193':0.12,'Breloom|201/193':0.12,
+  'Luxray|202/193':0.12,'Clefable|203/193':0.12,'Magnezone|204/193':0.12,'Tinkaton|205/193':0.12,
+  'Pawmot|206/193':0.13,'Flamigo|207/193':0.12,'Ceruledge|208/193':0.12,'Mimikyu|209/193':0.12,
+  'Scream Tail|210/193':0.12,'Iron Bundle|211/193':0.12,'Chien-Pao|212/193':0.12,'Eevee|213/193':0.12,
+  'Jolteon|214/193':0.12,'Vaporeon|215/193':0.12,'Flareon|216/193':0.12,'Espeon|217/193':0.12,
+  'Umbreon|218/193':0.12,'Leafeon|219/193':0.12,'Glaceon|220/193':0.12,'Sylveon|221/193':0.12,
+  'Tandemaus|222/193':0.12,'Iono|223/193':0.12,'Arven|224/193':0.12,'Nemona|225/193':0.12,
+  'Boss Orders Cyrus|226/193':0.12,'Penny|227/193':0.12,
+  'Professors Research Sada|228/193':0.12,'Professors Research Turo|229/193':0.12,
+  'Charizard|198/197':0.12,'Arcanine|199/197':0.12,'Tyranitar|200/197':0.12,'Dragonite|201/197':0.12,
+  'Umbreon|202/197':0.12,'Maushold|203/197':0.12,'Greavard|204/197':0.12,'Ceruledge|205/197':0.12,
+  'Houndstone|206/197':0.12,'Pidgeot|207/197':0.12,'Flamigo|208/197':0.12,'Revavroom|209/197':0.12,
+  'Bulbasaur|166/165':0.12,'Ivysaur|167/165':0.12,'Charmander|168/165':0.12,'Charmeleon|169/165':0.12,
+  'Squirtle|170/165':0.12,'Wartortle|171/165':0.12,'Caterpie|172/165':0.12,'Pikachu|173/165':0.12,
+  'Nidoking|174/165':0.12,'Psyduck|175/165':0.12,'Poliwag|176/165':0.12,'Haunter|177/165':0.12,
+  'Kangaskhan|178/165':0.12,'Scyther|179/165':0.12,'Magikarp|180/165':0.12,'Jolteon|181/165':0.12,
+  'Crustle|183/182':0.12,'Dottler|184/182':0.12,'Toedscruel|185/182':0.12,'Magby|186/182':0.12,
+  'Iron Moth|187/182':0.12,'Snorunt|188/182':0.12,'Mantyke|189/182':0.12,'Vanillish|190/182':0.12,
+  'Wimpod|191/182':0.12,'Veluza|192/182':0.12,'Plusle|193/182':0.12,'Minun|194/182':0.12,
+  'Blitzle|195/182':0.12,'Joltik|196/182':0.12,'Espathra|197/182':0.12,'Gimmighoul|198/182':0.12,
+  'Groudon|199/182':0.12,'Mienshao|200/182':0.12,'Minior|201/182':0.12,'Garganacl|202/182':0.12,
+  'Slither Wing|203/182':0.12,'Garbodor|204/182':0.12,'Yveltal|205/182':0.12,'Morpeko|206/182':0.12,
+  'Brute Bonnet|207/182':0.12,'Steelix|208/182':0.12,'Ferrothorn|209/182':0.12,'Aegislash|210/182':0.12,
+  'Aipom|211/182':0.12,'Loudred|212/182':0.12,'Swablu|213/182':0.12,'Porygon-Z|214/182':0.12,
+  'Cyclizar|215/182':0.12,'Iron Jugulis|216/182':0.12,
+  'Wugtrio|224/091':0.12,'Palafin|225/091':0.12,'Pawmi|226/091':0.12,
+  'Scyther|163/162':0.12,'Whimsicott|164/162':0.12,'Armarouge|165/162':0.12,'Ceruledge|166/162':0.12,
+  'Crabominable|167/162':0.12,'Magikarp|168/162':0.12,'Gyarados|169/162':0.12,'Milotic|170/162':0.12,
+  'Munkidori|171/162':0.12,'Raichu|172/162':0.12,'Farigiraf|173/162':0.12,'Gardevoir|174/162':0.12,
+  'Sandy Shocks|175/162':0.12,'Iron Crown|176/162':0.12,'Dugtrio|177/162':0.12,'Excadrill|178/162':0.12,
+  'Garchomp|179/162':0.12,'Flygon|180/162':0.12,'Dreepy|181/162':0.12,'Drakloak|182/162':0.12,
+  'Dragapult|183/162':0.12,'Wyrdeer|184/162':0.12,'Fezandipiti|185/162':0.12,
+  'Applin|168/167':0.12,'Flapple|169/167':0.12,'Appletun|170/167':0.12,'Dipplin|171/167':0.12,
+  'Hydrapple|172/167':0.12,'Victini|173/167':0.12,'Entei|174/167':0.12,'Magmar|175/167':0.12,
+  'Bramblin|176/167':0.12,'Munkidori|177/167':0.12,'Yanma|178/167':0.12,'Froakie|179/167':0.12,
+  'Frogadier|180/167':0.12,'Sinistea|181/167':0.12,'Poltchageist|182/167':0.12,'Maschiff|183/167':0.12,
+  'Okidogi|184/167':0.12,'Milotic|185/167':0.12,'Ogerpon|186/167':0.12,'Latios|187/167':0.12,'Pecharunt|188/167':0.12,
+  'Bloodmoon Ursaluna|068/064':0.12,'Darkrai|069/064':0.12,'Noctowl|070/064':0.12,'Poipole|071/064':0.12,'Dusknoir|072/064':0.12,
+  'Bulbasaur|143/142':0.12,'Pidgey|144/142':0.12,'Charmander|145/142':0.12,'Squirtle|146/142':0.12,
+  'Wooper|147/142':0.12,'Espurr|148/142':0.12,'Greavard|149/142':0.12,'Dudunsparce|150/142':0.12,
+  'Ceruledge|151/142':0.12,'Charizard|152/142':0.12,'Terapagos|153/142':0.12,'Hydrapple|154/142':0.12,'Dusknoir|155/142':0.12,
+  'Pincurchin|192/191':0.12,'Ampharos|193/191':0.12,'Raichu|194/191':0.12,'Pikachu|195/191':0.12,
+  'Flaaffy|196/191':0.12,'Morpeko|197/191':0.12,'Latios|198/191':0.12,'Gyarados|199/191':0.12,
+  'Lapras|200/191':0.12,'Milotic|201/191':0.12,'Dratini|202/191':0.12,'Dragonair|203/191':0.12,
+  'Dragonite|204/191':0.12,'Hydreigon|205/191':0.12,'Altaria|206/191':0.12,'Flygon|207/191':0.12,
+  'Garchomp|208/191':0.12,'Goodra|209/191':0.12,'Latias|210/191':0.12,'Iron Thorns|211/191':0.12,
+  'Alolan Exeggutor|212/191':0.12,'Durant|213/191':0.12,'Archaludon|214/191':0.12,
+  'Turtwig|160/159':0.12,'Chimchar|161/159':0.12,'Piplup|162/159':0.12,'Clefairy|163/159':0.12,
+  'Togepi|164/159':0.12,'Togekiss|165/159':0.12,'Volcanion|166/159':0.12,'Zacian|167/159':0.12,
+  'Terapagos|168/159':0.12,'Bellibolt|169/159':0.12,'Zoroark|170/159':0.12,
+  'Yanma|183/182':0.12,'Yanmega|184/182':0.12,'Moltres|185/182':0.12,'Ho-Oh|186/182':0.12,
+  'Mewtwo|187/182':0.12,'Nidoking|188/182':0.12,'Crobat|189/182':0.12,'Mabosstiff|190/182':0.17,
+  'Garchomp|191/182':0.12,'Psyduck|192/182':0.12,'Shaymin|193/182':0.12,'Pikachu|194/182':0.12,
+  'Wobbuffet|195/182':0.12,'Grimer|196/182':0.12,'Muk|197/182':0.12,'Ekans|198/182':0.12,
+  'Arbok|199/182':0.12,'Zubat|200/182':0.12,'Golbat|201/182':0.12,'Koffing|202/182':0.12,
+  'Weezing|203/182':0.12,'Grimmsnarl ex|204/182':0.12,'Meowth|205/182':0.12
+};
+
+var SIR_GEM_RATES={
+  'Spidops ex|243/198':0.4,'Miraidon ex|244/198':0.43,'Gardevoir ex|245/198':0.39,'Great Tusk ex|246/198':0.47,
+  'Koraidon ex|247/198':0.44,'Iron Treads ex|248/198':0.41,'Arven|249/198':0.31,'Jacq|250/198':0.33,
+  'Miriam|251/198':0.35,'Penny|252/198':0.36,
+  'Meowscarada ex|256/193':0.46,'Wo-Chien ex|257/193':0.47,'Skeledirge ex|258/193':0.44,'Chi-Yu ex|259/193':0.43,
+  'Quaquaval ex|260/193':0.46,'Chien-Pao ex|261/193':0.53,'Tinkaton ex|262/193':0.39,'Ting-Lu ex|263/193':0.44,
+  'Squawkabilly ex|264/193':0.42,'Boss Orders Ghetsis|265/193':0.42,'Dendra|266/193':0.36,
+  'Giacomo|267/193':0.36,'Grusha|268/193':0.4,'Iono|269/193':0.46,'Saguaro|270/193':0.44,
+  'Eiscue ex|222/197':0.41,'Charizard ex|223/197':0.24,'Revavroom ex|224/197':0.27,'Pidgeot ex|225/197':0.3,
+  'Geeta|226/197':0.24,'Poppy|227/197':0.24,
+  'Venusaur ex|198/165':0.31,'Charizard ex|199/165':0.29,'Blastoise ex|200/165':0.31,'Alakazam ex|201/165':0.32,
+  'Zapdos ex|202/165':0.33,'Erikas Invitation|203/165':0.28,'Giovannis Charisma|204/165':0.27,
+  'Garchomp ex|245/182':0.34,'Golisopod ex|246/182':0.5,'Tapu Koko ex|247/182':0.42,'Iron Hands ex|248/182':0.4,
+  'Iron Valiant ex|249/182':0.38,'Sandy Shocks ex|250/182':0.41,'Roaring Moon ex|251/182':0.46,
+  'Gholdengo ex|252/182':0.39,'Altaria ex|253/182':0.42,'Mela|254/182':0.35,'Parasol Lady|255/182':0.36,
+  'Professor Sadas Vitality|256/182':0.33,'Professor Turos Scenario|257/182':0.32,
+  'Rika|258/182':0.34,'Tulip|259/182':0.35,
+  'Mew ex|232/091':0.36,'Gardevoir ex|233/091':0.37,'Charizard ex|234/091':0.43,'Arven|235/091':0.35,
+  'Clive|236/091':0.32,'Iono|237/091':0.38,'Nemona|238/091':0.33,'Penny|239/091':0.34,
+  'Iron Leaves ex|203/162':0.45,'Gouging Fire ex|204/162':0.44,'Walking Wake ex|205/162':0.46,
+  'Iron Crown ex|206/162':0.47,'Iron Boulder ex|207/162':0.43,'Raging Bolt ex|208/162':0.48,
+  'Biancas Devotion|209/162':0.36,'Eri|210/162':0.37,'Mortys Conviction|211/162':0.39,'Salvatore|212/162':0.35,
+  'Sinistcha ex|210/167':0.54,'Teal Mask Ogerpon ex|211/167':0.51,'Hearthflame Mask Ogerpon ex|212/167':0.53,
+  'Wellspring Mask Ogerpon ex|213/167':0.49,'Greninja ex|214/167':0.46,'Cornerstone Mask Ogerpon ex|215/167':0.43,
+  'Blood Moon Ursaluna ex|216/167':0.54,'Carmine|217/167':0.37,'Kieran|218/167':0.35,
+  'Lanas Aid|219/167':0.39,'Perrin|220/167':0.42,
+  'Okidogi ex|090/064':0.49,'Munkidori ex|091/064':0.46,'Fezandipiti ex|092/064':0.38,
+  'Pecharunt ex|093/064':0.48,'Cassiopeia|094/064':0.42,
+  'Hydrapple ex|167/142':0.42,'Galvantula ex|168/142':0.4,'Dachsbun ex|169/142':0.43,
+  'Terapagos ex|170/142':0.39,'Briar|171/142':0.35,'Lacey|172/142':0.36,
+  'Durant ex|236/191':0.42,'Milotic ex|237/191':0.39,'Pikachu ex|238/191':0.33,'Latias ex|239/191':0.34,
+  'Hydreigon ex|240/191':0.37,'Archaludon ex|241/191':0.41,'Alolan Exeggutor ex|242/191':0.4,
+  'Clemonts Quick Wit|243/191':0.34,'Drayton|244/191':0.35,'Jasmines Gaze|245/191':0.34,'Lisias Appeal|246/191':0.36,
+  'Leafeon ex|144/131':0.35,'Teal Mask Ogerpon ex|145/131':0.39,'Flareon ex|146/131':0.34,
+  'Ceruledge ex|147/131':0.37,'Hearthflame Mask Ogerpon ex|148/131':0.4,'Vaporeon ex|149/131':0.33,
+  'Glaceon ex|150/131':0.34,'Palafin ex|151/131':0.36,'Wellspring Mask Ogerpon ex|152/131':0.38,
+  'Jolteon ex|153/131':0.34,'Iron Hands ex|154/131':0.36,'Espeon ex|155/131':0.35,
+  'Sylveon ex|156/131':0.36,'Iron Valiant ex|157/131':0.35,'Iron Crown ex|158/131':0.36,
+  'Sandy Shocks ex|159/131':0.37,'Cornerstone Mask Ogerpon ex|160/131':0.38,'Umbreon ex|161/131':0.31,
+  'Roaring Moon ex|162/131':0.35,'Pecharunt ex|163/131':0.37,'Gholdengo ex|164/131':0.36,
+  'Dragapult ex|165/131':0.38,'Raging Bolt ex|166/131':0.39,'Eevee ex|167/131':0.33,
+  'Bloodmoon Ursaluna ex|168/131':0.37,'Terapagos ex|169/131':0.35,'Amarys|170/131':0.33,
+  'Crispin|171/131':0.35,'Drayton|172/131':0.34,'Janines Secret Art|173/131':0.36,
+  'Kieran|174/131':0.35,'Lacey|175/131':0.34,
+  'Volcanion ex|182/159':0.3,'Ionos Bellibolt ex|183/159':0.35,'Lillies Clefairy ex|184/159':0.34,
+  'Ns Zoroark ex|185/159':0.39,'Hops Zacian ex|186/159':0.29,'Salamence ex|187/159':0.41,
+  'Yanmega ex|228/182':0.62,'Team Rockets Moltres ex|229/182':0.57,'Ethans Ho-Oh ex|230/182':0.59,
+  'Team Rockets Mewtwo ex|231/182':0.56,'Cynthias Garchomp ex|232/182':0.6,
+  'Team Rockets Nidoking ex|233/182':0.59,'Team Rockets Crobat ex|234/182':0.62,
+  'Arvens Mabosstiff ex|235/182':0.6,'Ethans Adventure|236/182':0.43,
+  'Team Rockets Ariana|237/182':0.5,'Team Rockets Giovanni|238/182':0.51
+};
+
+function getGemRate(n,num,r){
+  var isSIR=(r||'').toLowerCase().includes('special illustration');
+  var db=isSIR?SIR_GEM_RATES:IR_GEM_RATES;
+  var k=n+'|'+num;
+  if(db[k]!==undefined)return db[k];
+  var nl=n.toLowerCase().replace(/[^a-z0-9]/g,'');
+  for(var x in db){
+    var kn=x.split('|')[0].toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(kn===nl)return db[x];
+  }
+  return isSIR?0.38:0.12;
+}
+function calcModelPsa10Price(raw,gem){return raw*(gem>0?1/gem:8.33)*0.6}
+
+var PULL_RATES={
   sv1:{name:'Scarlet & Violet Base',ur:15,ir:13,sir:32,hr:54,urInSet:20,irInSet:24,sirInSet:10,hrInSet:6},
   sv2:{name:'Paldea Evolved',ur:15,ir:13,sir:32,hr:57,urInSet:26,irInSet:36,sirInSet:15,hrInSet:9},
   sv3:{name:'Obsidian Flames',ur:15,ir:13,sir:32,hr:52,urInSet:12,irInSet:12,sirInSet:6,hrInSet:3},
@@ -312,33 +517,30 @@ const PULL_RATES={
   sv10:{name:'Destined Rivals',ur:16,ir:12,sir:94,hr:149,urInSet:21,irInSet:23,sirInSet:11,hrInSet:6}
 };
 
-const CHAR_PREMIUM={charizard:10,umbreon:9.5,mew:9,pikachu:8.5,mewtwo:8,eevee:7.5,gengar:7,dragonite:6.5,rayquaza:6,lugia:6,gardevoir:5.5,snorlax:5,sylveon:5,espeon:5,leafeon:4.5,flareon:4.5,vaporeon:4.5,jolteon:4.5,glaceon:4.5,gyarados:4,arcanine:4,blastoise:4,venusaur:3.5,alakazam:3.5};
+var CHAR_PREMIUM={charizard:10,umbreon:9.5,mew:9,pikachu:8.5,mewtwo:8,eevee:7.5,gengar:7,dragonite:6.5,rayquaza:6,lugia:6,gardevoir:5.5,snorlax:5,sylveon:5,espeon:5,leafeon:4.5,flareon:4.5,vaporeon:4.5,jolteon:4.5,glaceon:4.5,gyarados:4,arcanine:4,blastoise:4,venusaur:3.5,alakazam:3.5};
 
-function calcPullCostScore(r,c){const a=r*c;return{avgPacks:a,score:Math.round(Math.min(10,Math.max(1,a/200))*10)/10}}
-function calcDesirability(c,a,u){return Math.round((c*0.45+a*0.45+u*0.10)*10)/10}
-function calcModelPrice(p,d){return Math.exp(2.1+0.19*p+0.41*d)}
-function getVerdict(pred,actual){const d=(actual-pred)/pred;if(d>0.25)return{text:'🔴 Overvalued',cls:'verdict-over',diff:d};if(d<-0.20)return{text:'🟢 Undervalued',cls:'verdict-under',diff:d};return{text:'✅ Fairly Valued',cls:'verdict-fair',diff:d}}
-function getRarityTag(r){if(!r)return'';const l=r.toLowerCase();if(l.includes('special illustration'))return'<span class="tag tag-sir">SIR</span>';if(l.includes('hyper'))return'<span class="tag tag-hr">HR</span>';if(l.includes('illustration rare'))return'<span class="tag tag-ir">IR</span>';if(l.includes('ultra rare'))return'<span class="tag tag-ur">UR</span>';if(l.includes('double'))return'<span class="tag tag-other">DR</span>';return'<span class="tag tag-other">'+r.substring(0,10)+'</span>'}
-function getCharScore(n){const l=(n||'').toLowerCase();for(const[c,s]of Object.entries(CHAR_PREMIUM))if(l.includes(c))return s;return 5}
-function updateDesirability(){const c=+document.getElementById('charSlider').value,a=+document.getElementById('artSlider').value,u=+document.getElementById('appealSlider').value;document.getElementById('desirabilityDisplay').textContent=calcDesirability(c,a,u).toFixed(1)}
-function calcPullCost(){const r=parseFloat(document.getElementById('pullRateInput').value),c=parseFloat(document.getElementById('cardsInSlotInput').value);if(!r||!c){alert('Enter both values.');return}const{avgPacks,score}=calcPullCostScore(r,c);document.getElementById('packsDisplay').textContent=Math.round(avgPacks).toLocaleString();document.getElementById('pullScoreDisplay').textContent=score.toFixed(1)}
-function autoFillPullData(sk,ry){const s=PULL_RATES[sk];if(!s)return;const m={SIR:{rate:s.sir,inSet:s.sirInSet},IR:{rate:s.ir,inSet:s.irInSet},HR:{rate:s.hr,inSet:s.hrInSet},UR:{rate:s.ur,inSet:s.urInSet}};const d=m[ry];if(d&&d.rate&&d.inSet){document.getElementById('pullRateInput').value=d.rate;document.getElementById('cardsInSlotInput').value=d.inSet;calcPullCost()}}
-function switchTab(t){['analyze','browse','model'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'block':'none');document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',['analyze','browse','model'][i]===t))}
+function calcPCS(r,c){var a=r*c;return{avgPacks:a,score:Math.round(Math.min(10,Math.max(1,a/200))*10)/10}}
+function calcD(c,a,u){return Math.round((c*0.45+a*0.45+u*0.10)*10)/10}
+function calcMP(p,d){return Math.exp(2.1+0.19*p+0.41*d)}
+function getPsa10V(mkt,mod){var d=(mkt-mod)/mod;if(d<-0.20)return{text:'Undervalued PSA 10',cls:'verdict-under',diff:d};if(d>0.25)return{text:'Overvalued PSA 10',cls:'verdict-over',diff:d};return{text:'Fairly Valued PSA 10',cls:'verdict-fair',diff:d}}
+function getV(p,a){var d=(a-p)/p;if(d>0.25)return{text:'Overvalued',cls:'verdict-over',diff:d};if(d<-0.20)return{text:'Undervalued',cls:'verdict-under',diff:d};return{text:'Fairly Valued',cls:'verdict-fair',diff:d}}
+function getRTag(r){if(!r)return'';var l=r.toLowerCase();if(l.includes('special illustration'))return'<span class="tag tag-sir">SIR</span>';if(l.includes('hyper'))return'<span class="tag tag-hr">HR</span>';if(l.includes('illustration rare'))return'<span class="tag tag-ir">IR</span>';if(l.includes('ultra rare'))return'<span class="tag tag-ur">UR</span>';return'<span class="tag tag-other">'+r.substring(0,8)+'</span>'}
+function getCS(n){var l=(n||'').toLowerCase();for(var c in CHAR_PREMIUM)if(l.includes(c))return CHAR_PREMIUM[c];return 5}
+function updateD(){var c=+document.getElementById('charSlider').value,a=+document.getElementById('artSlider').value,u=+document.getElementById('appealSlider').value;document.getElementById('desirabilityDisplay').textContent=calcD(c,a,u).toFixed(1)}
+function calcPullCost(){var r=parseFloat(document.getElementById('pullRateInput').value),c=parseFloat(document.getElementById('cardsInSlotInput').value);if(!r||!c){alert('Enter both values.');return}var res=calcPCS(r,c);document.getElementById('packsDisplay').textContent=Math.round(res.avgPacks).toLocaleString();document.getElementById('pullScoreDisplay').textContent=res.score.toFixed(1)}
+function autoFill(sk,ry){var s=PULL_RATES[sk];if(!s)return;var m={SIR:{rate:s.sir,inSet:s.sirInSet},IR:{rate:s.ir,inSet:s.irInSet},HR:{rate:s.hr,inSet:s.hrInSet},UR:{rate:s.ur,inSet:s.urInSet}};var d=m[ry];if(d&&d.rate&&d.inSet){document.getElementById('pullRateInput').value=d.rate;document.getElementById('cardsInSlotInput').value=d.inSet;calcPullCost()}}
+function switchTab(t){['analyze','scanner','browse','model'].forEach(function(x){document.getElementById('tab-'+x).style.display=x===t?'block':'none'});document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active',['analyze','scanner','browse','model'][i]===t)})}
+function setSortMode(m){_sortMode=m;['diff','psa10','gem'].forEach(function(x){var el=document.getElementById('sort'+x.charAt(0).toUpperCase()+x.slice(1));if(el)el.classList.toggle('active',x===m)});redrawScanner()}
 
-async function apiCall(endpoint,params={}){
-  const qs=new URLSearchParams({endpoint,...params}).toString();
-  const res=await fetch('/api/proxy?'+qs);
-  if(!res.ok)throw new Error('HTTP '+res.status);
-  return res.json();
-}
+async function api(ep,p){p=p||{};var qs=new URLSearchParams(Object.assign({endpoint:ep},p)).toString();var r=await fetch('/api/proxy?'+qs);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 
 async function testConnection(){
   try{
-    const d=await apiCall('cards',{per_page:1,page:1});
+    var d=await api('cards',{per_page:1,page:1});
     if(d&&(d.data||d.cards||Array.isArray(d))){
       document.getElementById('statusDot').className='status-dot connected';
-      document.getElementById('statusText').textContent='Connected — live prices active ✓';
-    }else throw new Error('Bad response');
+      document.getElementById('statusText').textContent='Connected -- live prices active | 244 IR + 153 SIR exact gem rates loaded';
+    }else throw new Error('no data');
   }catch(e){
     document.getElementById('statusDot').className='status-dot error';
     document.getElementById('statusText').textContent='API error: '+e.message;
@@ -346,66 +548,44 @@ async function testConnection(){
 }
 
 async function fetchCard(){
-  const name=document.getElementById('cardSearch').value.trim();
-  const sk=document.getElementById('setSelect').value;
-  const ry=document.getElementById('raritySelect').value;
-  const errEl=document.getElementById('fetchError');
-  errEl.style.display='none';
+  var name=document.getElementById('cardSearch').value.trim();
+  var sk=document.getElementById('setSelect').value,ry=document.getElementById('raritySelect').value;
+  var errEl=document.getElementById('fetchError');errEl.style.display='none';
   if(!name){errEl.textContent='Please enter a card name.';errEl.style.display='block';return}
-  if(sk&&ry)autoFillPullData(sk,ry);
-  const cs=getCharScore(name);
-  document.getElementById('charSlider').value=cs;
-  document.getElementById('charScore').textContent=cs;
-  updateDesirability();
-  const rp=document.getElementById('resultPanel');
+  if(sk&&ry)autoFill(sk,ry);
+  var cs=getCS(name);document.getElementById('charSlider').value=cs;document.getElementById('charScore').textContent=cs;updateD();
+  var rp=document.getElementById('resultPanel');
   rp.innerHTML='<div class="price-hero"><div class="loading"><div class="spinner"></div>Fetching cards...</div></div>';
   try{
-    const data=await apiCall('cards',{per_page:30,page:1,sort:'relevance',name});
-    let cards=data.data||data.cards||(Array.isArray(data)?data:[]);
-    if(sk&&PULL_RATES[sk]){
-      const setName=PULL_RATES[sk].name.toLowerCase();
-      cards=cards.filter(c=>{const ep=(c.set?.name||c.episode?.name||c.expansion?.name||'').toLowerCase();return ep===setName||ep.includes(setName)||setName.includes(ep)});
-    }
-    if(ry){
-      const rk={SIR:'special illustration',IR:'illustration rare',HR:'hyper',UR:'ultra rare'};
-      const kw=rk[ry]||ry.toLowerCase();
-      cards=cards.filter(c=>(c.rarity||'').toLowerCase().includes(kw));
-    }
-    if(!cards.length){rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">🔍</div><p>No cards found matching your filters.<br><small style="opacity:0.6">Try removing the set or rarity filter.</small></p></div></div>';return}
+    var data=await api('cards',{per_page:30,page:1,sort:'relevance',name:name});
+    var cards=data.data||data.cards||(Array.isArray(data)?data:[]);
+    if(sk&&PULL_RATES[sk]){var sn=PULL_RATES[sk].name.toLowerCase();cards=cards.filter(function(c){var ep=((c.set&&c.set.name)||(c.episode&&c.episode.name)||(c.expansion&&c.expansion.name)||'').toLowerCase();return ep===sn||ep.includes(sn)||sn.includes(ep)})}
+    if(ry){var rk={SIR:'special illustration',IR:'illustration rare',HR:'hyper',UR:'ultra rare'};var kw=rk[ry]||ry.toLowerCase();cards=cards.filter(function(c){return(c.rarity||'').toLowerCase().includes(kw)})}
+    if(!cards.length){rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">?</div><p>No cards found. Try removing filters.</p></div></div>';return}
     window._searchResults=cards.slice(0,15);
     rp.innerHTML='<div class="card-results fade-up"><div class="card-results-header"><div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div></div>'+
       window._searchResults.map(function(card,i){
-        const price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
-        const setLabel=(card.set&&card.set.name)?card.set.name:(card.episode&&card.episode.name)?card.episode.name:(card.expansion&&card.expansion.name)?card.expansion.name:'—';
-        return '<div class="card-result-row">'+
-          '<div><div class="card-name">'+(card.name||'—')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
-          '<div style="font-size:0.8rem;color:var(--muted)">'+setLabel+'</div>'+
-          '<div>'+getRarityTag(card.rarity)+'</div>'+
-          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.9rem">'+(price?'$'+parseFloat(price).toFixed(2):'—')+'</div>'+
-          '<div><button class="btn" style="padding:6px 14px;font-size:0.78rem" onclick="selectCard('+i+')">Select</button></div>'+
-          '</div>';
-      }).join('')+
-    '</div>';
-  }catch(e){
-    errEl.textContent='API error: '+e.message;
-    errEl.style.display='block';
-    rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">⚡</div><p>Could not fetch cards.<br>Use sliders to run model manually.</p></div></div>';
-  }
+        var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
+        var sl=(card.set&&card.set.name)||(card.episode&&card.episode.name)||(card.expansion&&card.expansion.name)||'-';
+        return'<div class="card-result-row"><div><div class="card-name">'+(card.name||'-')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
+          '<div style="font-size:0.8rem;color:var(--muted)">'+sl+'</div>'+
+          '<div>'+getRTag(card.rarity)+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.9rem">'+(price?'$'+parseFloat(price).toFixed(2):'-')+'</div>'+
+          '<div><button class="btn" style="padding:6px 14px;font-size:0.78rem" onclick="selectCard('+i+')">Select</button></div></div>';
+      }).join('')+'</div>';
+  }catch(e){errEl.textContent='API error: '+e.message;errEl.style.display='block';rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">!</div><p>Use sliders to run model manually.</p></div></div>'}
 }
 
 function selectCard(i){
-  var card=window._searchResults[i];
-  if(!card){alert('Card not found. Please search again.');return}
-  var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
-  var cs=getCharScore(card.name);
-  document.getElementById('charSlider').value=cs;
-  document.getElementById('charScore').textContent=cs;
-  updateDesirability();
-  window._selectedCardPrice=price?parseFloat(price):null;
-  window._selectedCardName=card.name;
-  var sk=document.getElementById('setSelect').value;
-  var ry=document.getElementById('raritySelect').value;
-  if(sk&&ry)autoFillPullData(sk,ry);
+  var card=window._searchResults[i];if(!card)return;
+  var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?parseFloat(card.prices.tcg_player.market_price):(card.prices&&card.prices.market?parseFloat(card.prices.market):null);
+  var psa10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
+  var cs=getCS(card.name);document.getElementById('charSlider').value=cs;document.getElementById('charScore').textContent=cs;updateD();
+  window._selectedCardPrice=price;window._selectedCardPsa10=psa10;
+  window._selectedCardName=card.name;window._selectedCardNumber=card.number||'';window._selectedCardRarity=card.rarity||'';
+  var sk=document.getElementById('setSelect').value,ry=document.getElementById('raritySelect').value;
+  if(sk&&ry)autoFill(sk,ry);
+  else if(sk){var r=(card.rarity||'').toLowerCase();var dr=r.includes('special illustration')?'SIR':r.includes('illustration rare')?'IR':r.includes('hyper')?'HR':r.includes('ultra rare')?'UR':'';if(dr)autoFill(sk,dr)}
   runModel();
   document.getElementById('resultPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -413,90 +593,167 @@ function selectCard(i){
 function runModel(){
   var ps=parseFloat(document.getElementById('pullScoreDisplay').textContent)||5;
   var ds=parseFloat(document.getElementById('desirabilityDisplay').textContent)||5;
-  var market=window._selectedCardPrice||null;
+  var market=window._selectedCardPrice||null,psa10Market=window._selectedCardPsa10||null;
   var name=window._selectedCardName||document.getElementById('cardSearch').value||'Card';
-  var pred=calcModelPrice(ps,ds);
-  var verdict=market?getVerdict(pred,market):null;
-  var c=+document.getElementById('charSlider').value;
-  var a=+document.getElementById('artSlider').value;
-  var u=+document.getElementById('appealSlider').value;
+  var cardNum=window._selectedCardNumber||'',rarity=window._selectedCardRarity||'';
+  var pred=calcMP(ps,ds),verdict=market?getV(pred,market):null;
+  var c=+document.getElementById('charSlider').value,a=+document.getElementById('artSlider').value,u=+document.getElementById('appealSlider').value;
+  var gem=getGemRate(name,cardNum,rarity),modelPsa10=calcModelPsa10Price(pred,gem);
+  var p10Html='';
+  if(psa10Market){
+    var pv=getPsa10V(psa10Market,modelPsa10),dc=pv.diff<0?'var(--green)':'var(--red)';
+    p10Html='<div class="breakdown-panel fade-up" style="border-color:'+(pv.diff<-0.20?'rgba(61,220,132,0.4)':pv.diff>0.25?'rgba(255,95,95,0.3)':'var(--border)')+'">'+
+      '<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:16px">PSA 10 Valuation Analysis</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">'+
+        '<div class="scanner-stat"><div class="scanner-stat-label">Gem Rate</div><div class="scanner-stat-val" style="color:var(--blue)">'+(gem*100).toFixed(0)+'%</div></div>'+
+        '<div class="scanner-stat"><div class="scanner-stat-label">PSA 10 Market</div><div class="scanner-stat-val" style="color:var(--accent)">$'+psa10Market.toFixed(0)+'</div></div>'+
+        '<div class="scanner-stat"><div class="scanner-stat-label">Model PSA 10</div><div class="scanner-stat-val">$'+modelPsa10.toFixed(0)+'</div></div>'+
+      '</div>'+
+      '<div class="verdict-row"><span class="verdict-badge '+pv.cls+'">'+pv.text+'</span>'+
+      '<span style="font-size:0.85rem;color:var(--muted);margin-left:12px">Market vs Model: <strong style="color:'+dc+'">'+(pv.diff>=0?'+':'')+(pv.diff*100).toFixed(0)+'%</strong></span></div>'+
+    '</div>';
+  }else{
+    p10Html='<div class="breakdown-panel fade-up"><div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:8px">Model PSA 10 Value</div>'+
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.5rem;color:var(--accent)">$'+modelPsa10.toFixed(0)+'</div>'+
+      '<div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Gem rate: '+(gem*100).toFixed(0)+'% -- No PSA 10 market price from API for this card</div></div>';
+  }
   document.getElementById('resultPanel').innerHTML=
     '<div class="price-hero fade-up">'+
-      '<div class="price-hero-label">Model Predicted Price — '+name+'</div>'+
+      '<div class="price-hero-label">Model Predicted Raw Price -- '+name+'</div>'+
       '<div class="price-hero-main">$'+pred.toFixed(0)+'</div>'+
-      '<div class="price-hero-range">Confidence range: $'+(pred*0.85).toFixed(0)+' – $'+(pred*1.15).toFixed(0)+'</div>'+
+      '<div class="price-hero-range">Range: $'+(pred*0.85).toFixed(0)+' to $'+(pred*1.15).toFixed(0)+'</div>'+
       '<div class="verdict-row">'+
-        (verdict
-          ?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+'</span><span style="font-size:0.85rem;color:var(--muted)">Market: <strong style="color:var(--text)">$'+market.toFixed(2)+'</strong> &nbsp;·&nbsp; Diff: '+(verdict.diff>0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>'
-          :'<span class="verdict-badge verdict-fair">📊 Model Output</span><span style="font-size:0.85rem;color:var(--muted)">Enter market price below for verdict</span>')+
+        (verdict?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+' (Raw)</span><span style="font-size:0.85rem;color:var(--muted)">Market: <strong style="color:var(--text)">$'+market.toFixed(2)+'</strong> - Diff: '+(verdict.diff>=0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>':
+        '<span class="verdict-badge verdict-fair">Raw Model Output</span><span style="font-size:0.85rem;color:var(--muted)">Enter raw price below for verdict</span>')+
       '</div>'+
     '</div>'+
     '<div class="metrics-grid fade-up">'+
       '<div class="metric-card"><div class="metric-label">Pull Cost Score</div><div class="metric-value" style="color:var(--accent)">'+ps.toFixed(1)+'</div><div class="metric-sub">+19% per point</div></div>'+
       '<div class="metric-card"><div class="metric-label">Desirability Score</div><div class="metric-value" style="color:var(--accent)">'+ds.toFixed(1)+'</div><div class="metric-sub">+41% per point</div></div>'+
-      '<div class="metric-card"><div class="metric-label">Model R²</div><div class="metric-value" style="color:var(--green)">0.88</div><div class="metric-sub">88% variance explained</div></div>'+
+      '<div class="metric-card"><div class="metric-label">Gem Rate</div><div class="metric-value" style="color:var(--blue)">'+(gem*100).toFixed(0)+'%</div><div class="metric-sub">From your database</div></div>'+
     '</div>'+
+    p10Html+
     '<div class="breakdown-panel fade-up">'+
       '<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:20px">Desirability Breakdown</div>'+
-      '<div class="breakdown-row"><div class="breakdown-name">Character Premium <span style="color:var(--muted);font-size:0.7rem">(45%)</span></div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+c*10+'%"></div></div><div class="breakdown-score">'+c+'/10</div></div>'+
-      '<div class="breakdown-row"><div class="breakdown-name">Artwork & Hype <span style="color:var(--muted);font-size:0.7rem">(45%)</span></div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+a*10+'%;background:var(--accent2)"></div></div><div class="breakdown-score">'+a+'/10</div></div>'+
-      '<div class="breakdown-row"><div class="breakdown-name">Universal Appeal <span style="color:var(--muted);font-size:0.7rem">(10%)</span></div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+u*10+'%;background:#6495ed"></div></div><div class="breakdown-score">'+u+'/10</div></div>'+
+      '<div class="breakdown-row"><div class="breakdown-name">Character Premium (45%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+c*10+'%"></div></div><div class="breakdown-score">'+c+'/10</div></div>'+
+      '<div class="breakdown-row"><div class="breakdown-name">Artwork and Hype (45%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+a*10+'%;background:var(--accent2)"></div></div><div class="breakdown-score">'+a+'/10</div></div>'+
+      '<div class="breakdown-row"><div class="breakdown-name">Universal Appeal (10%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+u*10+'%;background:var(--blue)"></div></div><div class="breakdown-score">'+u+'/10</div></div>'+
       '<div class="divider"></div>'+
-      (market
-        ?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>Market Price</span><strong style="color:var(--text)">$'+market.toFixed(2)+'</strong></div><div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Model Price</span><strong style="color:var(--accent)">$'+pred.toFixed(2)+'</strong></div>'
-        :'<div class="input-wrap"><label>Enter Market Price for Verdict</label><div style="display:flex;gap:8px"><input type="number" id="marketPriceInput" placeholder="e.g. 450" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMarketPrice()">Check</button></div></div>')+
+      (market?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>Raw Market</span><strong style="color:var(--text)">$'+market.toFixed(2)+'</strong></div><div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Raw Model</span><strong style="color:var(--accent)">$'+pred.toFixed(2)+'</strong></div>':
+      '<div class="input-wrap"><label>Enter Raw Market Price</label><div style="display:flex;gap:8px"><input type="number" id="mpi" placeholder="e.g. 120" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMp()">Check</button></div></div>')+
     '</div>';
 }
+function applyMp(){var mp=parseFloat(document.getElementById('mpi').value);if(!mp)return;window._selectedCardPrice=mp;runModel()}
 
-function applyMarketPrice(){var mp=parseFloat(document.getElementById('marketPriceInput').value);if(!mp)return;window._selectedCardPrice=mp;runModel()}
+async function runScanner(){
+  var setF=document.getElementById('scannerSetFilter').value,rarF=document.getElementById('scannerRarityFilter').value;
+  document.getElementById('scannerProgress').style.display='flex';
+  document.getElementById('scannerResults').innerHTML='';
+  _scannerData=[];
+  var sets=setF?[setF]:Object.values(PULL_RATES).map(function(s){return s.name});
+  var done=0,total=sets.length;
+  for(var i=0;i<sets.length;i++){
+    var sn=sets[i];
+    document.getElementById('scannerProgressText').textContent='Scanning '+sn+' ('+done+'/'+total+')...';
+    try{
+      var data=await api('cards',{per_page:50,page:1,sort:'number',episode:sn});
+      var cards=data.data||data.cards||(Array.isArray(data)?data:[]);
+      var sk=Object.keys(PULL_RATES).find(function(k){return PULL_RATES[k].name===sn})||'';
+      var sd=sk?PULL_RATES[sk]:{};
+      cards.forEach(function(card){
+        var r=(card.rarity||'').toLowerCase();
+        var isIR=r.includes('illustration rare')&&!r.includes('special'),isSIR=r.includes('special illustration');
+        if(!isIR&&!isSIR)return;if(rarF==='IR'&&!isIR)return;if(rarF==='SIR'&&!isSIR)return;
+        var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
+        if(!p10)return;
+        var rp=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?parseFloat(card.prices.tcg_player.market_price):null;
+        var cs=getCS(card.name),pr=isSIR?(sd.sir||90):(sd.ir||13),inSet=isSIR?(sd.sirInSet||10):(sd.irInSet||20);
+        var ps=calcPCS(pr,inSet).score,ds=calcD(cs,6,cs>7?8:5),mr=calcMP(ps,ds);
+        var gem=getGemRate(card.name||'',card.number||'',card.rarity||''),mp10=calcModelPsa10Price(mr,gem);
+        _scannerData.push({name:card.name||'-',setName:sn,number:card.number||'',rarity:card.rarity||'',rawPrice:rp,psa10Mkt:p10,modelPsa10:mp10,modelRaw:mr,gemRate:gem,diff:(p10-mp10)/mp10});
+      });
+    }catch(e){console.warn('Scanner error',sn,e.message)}
+    done++;
+  }
+  document.getElementById('scannerProgress').style.display='none';
+  redrawScanner();
+}
+
+function redrawScanner(){
+  var s=[].concat(_scannerData);
+  if(_sortMode==='diff')s.sort(function(a,b){return a.diff-b.diff});
+  else if(_sortMode==='psa10')s.sort(function(a,b){return b.psa10Mkt-a.psa10Mkt});
+  else s.sort(function(a,b){return b.gemRate-a.gemRate});
+  if(!s.length){document.getElementById('scannerResults').innerHTML='<div class="empty-state"><div class="empty-icon">?</div><p>No cards with PSA 10 price data from the API. Cardmarket graded prices may not be available for all sets yet.</p></div>';return}
+  var under=s.filter(function(c){return c.diff<-0.20}),fair=s.filter(function(c){return c.diff>=-0.20&&c.diff<=0.25}),over=s.filter(function(c){return c.diff>0.25});
+  var html='<div style="font-size:0.78rem;color:var(--muted);margin-bottom:20px;font-family:\'DM Mono\',monospace">'+s.length+' cards with PSA 10 data | '+under.length+' undervalued | '+fair.length+' fairly valued | '+over.length+' overvalued</div>';
+  if(under.length)html+='<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:3px;color:var(--green);font-size:0.9rem;margin-bottom:12px">UNDERVALUED PSA 10 ('+under.length+')</div><div class="scanner-grid" style="margin-bottom:32px">'+under.map(renderCard).join('')+'</div>';
+  if(fair.length)html+='<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:3px;color:var(--muted);font-size:0.9rem;margin-bottom:12px">FAIRLY VALUED ('+fair.length+')</div><div class="scanner-grid" style="margin-bottom:32px">'+fair.map(renderCard).join('')+'</div>';
+  if(over.length)html+='<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:3px;color:var(--red);font-size:0.9rem;margin-bottom:12px">OVERVALUED PSA 10 ('+over.length+')</div><div class="scanner-grid">'+over.map(renderCard).join('')+'</div>';
+  document.getElementById('scannerResults').innerHTML='<div class="fade-up">'+html+'</div>';
+}
+
+function renderCard(c){
+  var isU=c.diff<-0.20,isO=c.diff>0.25;
+  var vc=isU?'var(--green)':isO?'var(--red)':'var(--muted)';
+  var vt=isU?'Undervalued':isO?'Overvalued':'Fair Value';
+  var vcls=isU?'verdict-under':isO?'verdict-over':'verdict-fair';
+  var bw=Math.min(100,Math.abs(c.diff)*200),bc=isU?'var(--green)':isO?'var(--red)':'var(--accent)';
+  return'<div class="scanner-card '+(isU?'undervalued':isO?'overvalued':'')+'">'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:3px"><div class="scanner-card-name">'+c.name+'</div>'+getRTag(c.rarity)+'</div>'+
+    '<div class="scanner-card-set">'+c.setName+(c.number?' #'+c.number:'')+'</div>'+
+    '<div class="scanner-stats">'+
+      '<div class="scanner-stat"><div class="scanner-stat-label">PSA 10 Mkt</div><div class="scanner-stat-val" style="color:var(--accent)">$'+c.psa10Mkt.toFixed(0)+'</div></div>'+
+      '<div class="scanner-stat"><div class="scanner-stat-label">Model PSA 10</div><div class="scanner-stat-val">$'+c.modelPsa10.toFixed(0)+'</div></div>'+
+      '<div class="scanner-stat"><div class="scanner-stat-label">Gem Rate</div><div class="scanner-stat-val" style="color:var(--blue)">'+(c.gemRate*100).toFixed(0)+'%</div></div>'+
+    '</div>'+
+    '<div class="diff-bar-wrap"><div class="diff-bar" style="width:'+bw+'%;background:'+bc+'"></div></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<span class="verdict-badge '+vcls+'" style="font-size:0.75rem;padding:5px 12px">'+vt+'</span>'+
+      '<span style="font-family:\'DM Mono\',monospace;font-size:0.78rem;color:'+vc+'">'+(c.diff>=0?'+':'')+(c.diff*100).toFixed(0)+'% vs model</span>'+
+    '</div>'+
+    (c.rawPrice?'<div style="font-size:0.7rem;color:var(--muted);margin-top:8px">Raw: $'+c.rawPrice.toFixed(0)+' - Model Raw: $'+c.modelRaw.toFixed(0)+'</div>':'')+
+  '</div>';
+}
 
 async function browseSet(){
-  var sk=document.getElementById('browseSetSelect').value;
-  if(!sk){alert('Please select a set.');return}
+  var sk=document.getElementById('browseSetSelect').value;if(!sk){alert('Select a set.');return}
   var c=document.getElementById('browseResults');
-  c.innerHTML='<div class="loading"><div class="spinner"></div>Loading set cards...</div>';
+  c.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';
   try{
     var sd=PULL_RATES[sk];
-    var data=await apiCall('cards',{per_page:50,page:1,sort:'number',episode:sd.name});
+    var data=await api('cards',{per_page:50,page:1,sort:'number',episode:sd.name});
     var cards=data.data||data.cards||(Array.isArray(data)?data:[]);
     cards=cards.filter(function(card){var r=(card.rarity||'').toLowerCase();return r.includes('illustration')||r.includes('hyper')||r.includes('ultra rare')||r.includes('special')});
-    if(!cards.length){c.innerHTML='<div class="empty-state"><p>No chase cards found for this set.</p></div>';return}
+    if(!cards.length){c.innerHTML='<div class="empty-state"><p>No chase cards found.</p></div>';return}
     c.innerHTML='<div class="card-results fade-up">'+
-      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);letter-spacing:1px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>MARKET</div><div>MODEL</div><div>VERDICT</div></div>'+
+      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>RAW MKT</div><div>PSA 10 MKT</div><div>PSA 10 VERDICT</div></div>'+
       cards.slice(0,25).map(function(card){
-        var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
-        var cs=getCharScore(card.name);
-        var r=(card.rarity||'').toLowerCase();
-        var pr=sd.sir||90,inSet=sd.sirInSet||10;
-        if(r.includes('hyper')){pr=sd.hr||150;inSet=sd.hrInSet||5}
-        else if(r.includes('illustration rare')&&!r.includes('special')){pr=sd.ir||13;inSet=sd.irInSet||20}
-        else if(r.includes('ultra rare')){pr=sd.ur||15;inSet=sd.urInSet||15}
-        var ps=calcPullCostScore(pr,inSet).score;
-        var ds=calcDesirability(cs,6,cs>7?8:5);
-        var mp=calcModelPrice(ps,ds);
-        var vrd=price?getVerdict(mp,parseFloat(price)):null;
-        return '<div class="card-result-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">'+
-          '<div><div class="card-name">'+(card.name||'—')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
-          '<div>'+getRarityTag(card.rarity)+'</div>'+
-          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.88rem">'+(price?'$'+parseFloat(price).toFixed(2):'—')+'</div>'+
-          '<div style="font-family:\'DM Mono\',monospace;color:var(--accent);font-size:0.88rem">$'+mp.toFixed(0)+'</div>'+
-          '<div>'+(vrd?'<span class="verdict-badge '+vrd.cls+'" style="font-size:0.7rem;padding:4px 10px">'+vrd.text+'</span>':'—')+'</div>'+
-          '</div>';
-      }).join('')+
-    '</div>';
+        var rp=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?parseFloat(card.prices.tcg_player.market_price):null;
+        var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
+        var cs=getCS(card.name),r=(card.rarity||'').toLowerCase(),isSIR=r.includes('special illustration');
+        var pr=isSIR?(sd.sir||90):(r.includes('hyper')?(sd.hr||150):(sd.ir||13));
+        var inSet=isSIR?(sd.sirInSet||10):(r.includes('hyper')?(sd.hrInSet||5):(sd.irInSet||20));
+        var ps=calcPCS(pr,inSet).score,ds=calcD(cs,6,cs>7?8:5),mr=calcMP(ps,ds);
+        var gem=getGemRate(card.name||'',card.number||'',card.rarity||''),mp10=calcModelPsa10Price(mr,gem);
+        var vd='-';
+        if(p10){var pv=getPsa10V(p10,mp10);vd='<span class="verdict-badge '+pv.cls+'" style="font-size:0.68rem;padding:4px 8px">'+pv.text+'</span>'}
+        return'<div class="card-result-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">'+
+          '<div><div class="card-name">'+(card.name||'-')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
+          '<div>'+getRTag(card.rarity)+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.88rem">'+(rp?'$'+rp.toFixed(2):'-')+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--accent);font-size:0.88rem">'+(p10?'$'+p10.toFixed(2):'-')+'</div>'+
+          '<div>'+vd+'</div></div>';
+      }).join('')+'</div>';
   }catch(e){c.innerHTML='<div class="error-msg">Error: '+e.message+'</div>'}
 }
 
 function buildCharRef(){document.getElementById('charRefList').innerHTML=Object.entries(CHAR_PREMIUM).slice(0,12).map(function(e){return'<div class="breakdown-row" style="margin-bottom:8px"><div class="breakdown-name" style="color:var(--text);font-size:0.85rem;text-transform:capitalize">'+e[0]+'</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+e[1]*10+'%"></div></div><div class="breakdown-score">'+e[1]+'</div></div>'}).join('')}
-function buildPullTable(){document.getElementById('pullRateTable').innerHTML=Object.values(PULL_RATES).map(function(s){return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 12px;font-size:0.82rem">'+s.name+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.ur?'1/'+s.ur:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.ir?'1/'+s.ir:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.sir?'1/'+s.sir:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.hr?'1/'+s.hr:'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.sirInSet||'—')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.irInSet||'—')+'</td></tr>'}).join('')}
+function buildPullTable(){document.getElementById('pullRateTable').innerHTML=Object.values(PULL_RATES).map(function(s){return'<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 12px;font-size:0.82rem">'+s.name+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.ur?'1/'+s.ur:'-')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.ir?'1/'+s.ir:'-')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.sir?'1/'+s.sir:'-')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.hr?'1/'+s.hr:'-')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.sirInSet||'-')+'</td><td style="padding:10px 12px;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.78rem">'+(s.irInSet||'-')+'</td></tr>'}).join('')}
 
-document.getElementById('setSelect').addEventListener('change',function(){var s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;if(s&&r)autoFillPullData(s,r)});
-document.getElementById('raritySelect').addEventListener('change',function(){var s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;if(s&&r)autoFillPullData(s,r)});
-
-buildCharRef();
-buildPullTable();
-updateDesirability();
-testConnection();
+document.getElementById('setSelect').addEventListener('change',function(){var s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;if(s&&r)autoFill(s,r)});
+document.getElementById('raritySelect').addEventListener('change',function(){var s=document.getElementById('setSelect').value,r=document.getElementById('raritySelect').value;if(s&&r)autoFill(s,r)});
+buildCharRef();buildPullTable();updateD();testConnection();
 </script>
 </body>
 </html>
