@@ -338,7 +338,8 @@
         <div id="charRefList"></div>
         <div style="margin-top:16px;font-size:0.72rem;color:var(--muted);line-height:1.8">
           IR Gem Rate Database: <strong style="color:var(--green)">244 cards loaded</strong><br>
-          SIR Gem Rate Database: <strong style="color:var(--green)">153 cards loaded</strong>
+          SIR Gem Rate Database: <strong style="color:var(--green)">153 cards loaded</strong><br>
+          Price Source: <strong style="color:var(--accent)">Cardmarket (trendPrice)</strong>
         </div>
       </div>
       <div class="panel" style="grid-column:1/-1">
@@ -498,7 +499,24 @@ function getGemRate(n,num,r){
   }
   return isSIR?0.38:0.12;
 }
+
 function calcModelPsa10Price(raw,gem){return raw*(gem>0?1/gem:8.33)*0.6}
+
+// Cardmarket trendPrice > avg1 > avg7 > averageSellPrice > TCGPlayer fallback
+function getRawPrice(card){
+  if(!card||!card.prices)return null;
+  var cm=card.prices.cardmarket;
+  if(cm&&cm.prices){
+    if(cm.prices.trendPrice&&cm.prices.trendPrice>0)return parseFloat(cm.prices.trendPrice);
+    if(cm.prices.avg1&&cm.prices.avg1>0)return parseFloat(cm.prices.avg1);
+    if(cm.prices.avg7&&cm.prices.avg7>0)return parseFloat(cm.prices.avg7);
+    if(cm.prices.averageSellPrice&&cm.prices.averageSellPrice>0)return parseFloat(cm.prices.averageSellPrice);
+  }
+  if(card.prices.tcg_player&&card.prices.tcg_player.market_price&&card.prices.tcg_player.market_price>0)
+    return parseFloat(card.prices.tcg_player.market_price);
+  if(card.prices.market&&card.prices.market>0)return parseFloat(card.prices.market);
+  return null;
+}
 
 var PULL_RATES={
   sv1:{name:'Scarlet & Violet Base',ur:15,ir:13,sir:32,hr:54,urInSet:20,irInSet:24,sirInSet:10,hrInSet:6},
@@ -539,7 +557,7 @@ async function testConnection(){
     var d=await api('cards',{per_page:1,page:1});
     if(d&&(d.data||d.cards||Array.isArray(d))){
       document.getElementById('statusDot').className='status-dot connected';
-      document.getElementById('statusText').textContent='Connected -- live prices active | 244 IR + 153 SIR exact gem rates loaded';
+      document.getElementById('statusText').textContent='Connected -- Cardmarket prices active | 244 IR + 153 SIR gem rates loaded';
     }else throw new Error('no data');
   }catch(e){
     document.getElementById('statusDot').className='status-dot error';
@@ -563,9 +581,9 @@ async function fetchCard(){
     if(ry){var rk={SIR:'special illustration',IR:'illustration rare',HR:'hyper',UR:'ultra rare'};var kw=rk[ry]||ry.toLowerCase();cards=cards.filter(function(c){return(c.rarity||'').toLowerCase().includes(kw)})}
     if(!cards.length){rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">?</div><p>No cards found. Try removing filters.</p></div></div>';return}
     window._searchResults=cards.slice(0,15);
-    rp.innerHTML='<div class="card-results fade-up"><div class="card-results-header"><div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div></div>'+
+    rp.innerHTML='<div class="card-results fade-up"><div class="card-results-header"><div>CARD</div><div>SET</div><div>RARITY</div><div>CM PRICE</div><div></div></div>'+
       window._searchResults.map(function(card,i){
-        var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?card.prices.tcg_player.market_price:(card.prices&&card.prices.market?card.prices.market:null);
+        var price=getRawPrice(card);
         var sl=(card.set&&card.set.name)||(card.episode&&card.episode.name)||(card.expansion&&card.expansion.name)||'-';
         return'<div class="card-result-row"><div><div class="card-name">'+(card.name||'-')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
           '<div style="font-size:0.8rem;color:var(--muted)">'+sl+'</div>'+
@@ -578,7 +596,7 @@ async function fetchCard(){
 
 function selectCard(i){
   var card=window._searchResults[i];if(!card)return;
-  var price=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?parseFloat(card.prices.tcg_player.market_price):(card.prices&&card.prices.market?parseFloat(card.prices.market):null);
+  var price=getRawPrice(card);
   var psa10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
   var cs=getCS(card.name);document.getElementById('charSlider').value=cs;document.getElementById('charScore').textContent=cs;updateD();
   window._selectedCardPrice=price;window._selectedCardPsa10=psa10;
@@ -623,7 +641,7 @@ function runModel(){
       '<div class="price-hero-main">$'+pred.toFixed(0)+'</div>'+
       '<div class="price-hero-range">Range: $'+(pred*0.85).toFixed(0)+' to $'+(pred*1.15).toFixed(0)+'</div>'+
       '<div class="verdict-row">'+
-        (verdict?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+' (Raw)</span><span style="font-size:0.85rem;color:var(--muted)">Market: <strong style="color:var(--text)">$'+market.toFixed(2)+'</strong> - Diff: '+(verdict.diff>=0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>':
+        (verdict?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+' (Raw)</span><span style="font-size:0.85rem;color:var(--muted)">CM Price: <strong style="color:var(--text)">$'+market.toFixed(2)+'</strong> - Diff: '+(verdict.diff>=0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>':
         '<span class="verdict-badge verdict-fair">Raw Model Output</span><span style="font-size:0.85rem;color:var(--muted)">Enter raw price below for verdict</span>')+
       '</div>'+
     '</div>'+
@@ -639,8 +657,8 @@ function runModel(){
       '<div class="breakdown-row"><div class="breakdown-name">Artwork and Hype (45%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+a*10+'%;background:var(--accent2)"></div></div><div class="breakdown-score">'+a+'/10</div></div>'+
       '<div class="breakdown-row"><div class="breakdown-name">Universal Appeal (10%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+u*10+'%;background:var(--blue)"></div></div><div class="breakdown-score">'+u+'/10</div></div>'+
       '<div class="divider"></div>'+
-      (market?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>Raw Market</span><strong style="color:var(--text)">$'+market.toFixed(2)+'</strong></div><div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Raw Model</span><strong style="color:var(--accent)">$'+pred.toFixed(2)+'</strong></div>':
-      '<div class="input-wrap"><label>Enter Raw Market Price</label><div style="display:flex;gap:8px"><input type="number" id="mpi" placeholder="e.g. 120" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMp()">Check</button></div></div>')+
+      (market?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>CM Price (primary)</span><strong style="color:var(--green)">$'+market.toFixed(2)+'</strong></div><div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Raw Model</span><strong style="color:var(--accent)">$'+pred.toFixed(2)+'</strong></div>':
+      '<div class="input-wrap"><label>Enter Cardmarket Price</label><div style="display:flex;gap:8px"><input type="number" id="mpi" placeholder="e.g. 285" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMp()">Check</button></div></div>')+
     '</div>';
 }
 function applyMp(){var mp=parseFloat(document.getElementById('mpi').value);if(!mp)return;window._selectedCardPrice=mp;runModel()}
@@ -666,7 +684,7 @@ async function runScanner(){
         if(!isIR&&!isSIR)return;if(rarF==='IR'&&!isIR)return;if(rarF==='SIR'&&!isSIR)return;
         var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
         if(!p10)return;
-        var rp=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?parseFloat(card.prices.tcg_player.market_price):null;
+        var rp=getRawPrice(card);
         var cs=getCS(card.name),pr=isSIR?(sd.sir||90):(sd.ir||13),inSet=isSIR?(sd.sirInSet||10):(sd.irInSet||20);
         var ps=calcPCS(pr,inSet).score,ds=calcD(cs,6,cs>7?8:5),mr=calcMP(ps,ds);
         var gem=getGemRate(card.name||'',card.number||'',card.rarity||''),mp10=calcModelPsa10Price(mr,gem);
@@ -712,7 +730,7 @@ function renderCard(c){
       '<span class="verdict-badge '+vcls+'" style="font-size:0.75rem;padding:5px 12px">'+vt+'</span>'+
       '<span style="font-family:\'DM Mono\',monospace;font-size:0.78rem;color:'+vc+'">'+(c.diff>=0?'+':'')+(c.diff*100).toFixed(0)+'% vs model</span>'+
     '</div>'+
-    (c.rawPrice?'<div style="font-size:0.7rem;color:var(--muted);margin-top:8px">Raw: $'+c.rawPrice.toFixed(0)+' - Model Raw: $'+c.modelRaw.toFixed(0)+'</div>':'')+
+    (c.rawPrice?'<div style="font-size:0.7rem;color:var(--muted);margin-top:8px">CM: $'+c.rawPrice.toFixed(0)+' - Model Raw: $'+c.modelRaw.toFixed(0)+'</div>':'')+
   '</div>';
 }
 
@@ -727,9 +745,9 @@ async function browseSet(){
     cards=cards.filter(function(card){var r=(card.rarity||'').toLowerCase();return r.includes('illustration')||r.includes('hyper')||r.includes('ultra rare')||r.includes('special')});
     if(!cards.length){c.innerHTML='<div class="empty-state"><p>No chase cards found.</p></div>';return}
     c.innerHTML='<div class="card-results fade-up">'+
-      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>RAW MKT</div><div>PSA 10 MKT</div><div>PSA 10 VERDICT</div></div>'+
+      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>CM PRICE</div><div>PSA 10</div><div>PSA 10 VERDICT</div></div>'+
       cards.slice(0,25).map(function(card){
-        var rp=card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price?parseFloat(card.prices.tcg_player.market_price):null;
+        var rp=getRawPrice(card);
         var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
         var cs=getCS(card.name),r=(card.rarity||'').toLowerCase(),isSIR=r.includes('special illustration');
         var pr=isSIR?(sd.sir||90):(r.includes('hyper')?(sd.hr||150):(sd.ir||13));
