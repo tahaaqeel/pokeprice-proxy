@@ -134,6 +134,7 @@
     <button class="tab" onclick="switchTab('model')">&#128208; Model Info</button>
   </div>
 
+  <!-- ANALYZE TAB -->
   <div id="tab-analyze">
     <div class="grid-2">
       <div class="panel">
@@ -227,20 +228,21 @@
     </div>
   </div>
 
+  <!-- PSA 10 SCANNER TAB -->
   <div id="tab-scanner" style="display:none">
     <div class="panel" style="margin-bottom:20px">
       <div class="section-title">PSA 10 Value Scanner</div>
       <div class="formula-box">
         Compares <strong>PSA 10 market price</strong> against <strong>model predicted PSA 10 value</strong>.<br>
         Model PSA 10 = Raw Model Price x (1 / Gem Rate) x 0.6 dampener<br>
-        All prices in <strong>CAD</strong> (converted from EUR at live rate)
+        <strong>Undervalued</strong> = PSA 10 market is below model prediction | <strong>Overvalued</strong> = above model prediction
       </div>
       <div class="scanner-controls">
         <div class="input-wrap" style="margin-bottom:0;flex:1;min-width:180px">
           <label>Filter by Set</label>
           <select id="scannerSetFilter" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;width:100%">
             <option value="">All Sets</option>
-            <option value="Scarlet & Violet Base">SV1 -- Scarlet and Violet Base</option>
+            <option value="Scarlet &amp; Violet Base">SV1 -- Scarlet and Violet Base</option>
             <option value="Paldea Evolved">SV2 -- Paldea Evolved</option>
             <option value="Obsidian Flames">SV3 -- Obsidian Flames</option>
             <option value="151">SV3.5 -- 151</option>
@@ -284,6 +286,7 @@
     </div>
   </div>
 
+  <!-- BROWSE TAB -->
   <div id="tab-browse" style="display:none">
     <div style="display:flex;gap:12px;margin-bottom:24px;align-items:flex-end;flex-wrap:wrap">
       <div class="input-wrap" style="flex:1;min-width:220px;margin-bottom:0">
@@ -313,6 +316,7 @@
     </div>
   </div>
 
+  <!-- MODEL INFO TAB -->
   <div id="tab-model" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div class="panel">
@@ -338,8 +342,7 @@
         <div id="charRefList"></div>
         <div style="margin-top:16px;font-size:0.72rem;color:var(--muted);line-height:1.8">
           IR Gem Rate Database: <strong style="color:var(--green)">244 cards loaded</strong><br>
-          SIR Gem Rate Database: <strong style="color:var(--green)">153 cards loaded</strong><br>
-          Currency: <strong style="color:var(--accent)">CAD (EUR x 1.62)</strong>
+          SIR Gem Rate Database: <strong style="color:var(--green)">153 cards loaded</strong>
         </div>
       </div>
       <div class="panel" style="grid-column:1/-1">
@@ -367,9 +370,6 @@
 window._searchResults=[];
 var _sortMode='diff';
 var _scannerData=[];
-
-// EUR to CAD conversion rate (update periodically)
-var EUR_TO_CAD=1.62;
 
 var IR_GEM_RATES={
   'Tarountula|199/198':0.03,'Dolliv|200/198':0.12,'Toedscool|201/198':0.12,'Scovillain|202/198':0.23,
@@ -495,6 +495,7 @@ function getGemRate(n,num,r){
   var db=isSIR?SIR_GEM_RATES:IR_GEM_RATES;
   var k=n+'|'+num;
   if(db[k]!==undefined)return db[k];
+  // fuzzy match by name only
   var nl=n.toLowerCase().replace(/[^a-z0-9]/g,'');
   for(var x in db){
     var kn=x.split('|')[0].toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -502,33 +503,34 @@ function getGemRate(n,num,r){
   }
   return isSIR?0.38:0.12;
 }
-
 function calcModelPsa10Price(raw,gem){return raw*(gem>0?1/gem:8.33)*0.6}
 
-// Convert EUR price from API to CAD
-function eurToCAD(v){return v?parseFloat((v*EUR_TO_CAD).toFixed(2)):null}
-
-// Get raw price in CAD: CM trendPrice (EUR->CAD) > avg1 > avg7 > averageSellPrice
+// Price extraction: Cardmarket trendPrice > avg1 > avg7 > TCGPlayer market > fallback
 function getRawPrice(card){
   if(!card||!card.prices)return null;
   var cm=card.prices.cardmarket;
   if(cm&&cm.prices){
-    if(cm.prices.trendPrice&&cm.prices.trendPrice>0)return eurToCAD(cm.prices.trendPrice);
-    if(cm.prices.avg1&&cm.prices.avg1>0)return eurToCAD(cm.prices.avg1);
-    if(cm.prices.avg7&&cm.prices.avg7>0)return eurToCAD(cm.prices.avg7);
-    if(cm.prices.averageSellPrice&&cm.prices.averageSellPrice>0)return eurToCAD(cm.prices.averageSellPrice);
+    if(cm.prices.trendPrice&&cm.prices.trendPrice>0)return parseFloat(cm.prices.trendPrice);
+    if(cm.prices.avg1&&cm.prices.avg1>0)return parseFloat(cm.prices.avg1);
+    if(cm.prices.avg7&&cm.prices.avg7>0)return parseFloat(cm.prices.avg7);
+    if(cm.prices.averageSellPrice&&cm.prices.averageSellPrice>0)return parseFloat(cm.prices.averageSellPrice);
   }
-  // TCGPlayer is USD — convert to CAD at ~1.39
   if(card.prices.tcg_player&&card.prices.tcg_player.market_price&&card.prices.tcg_player.market_price>0)
-    return parseFloat((card.prices.tcg_player.market_price*1.39).toFixed(2));
-  if(card.prices.market&&card.prices.market>0)return parseFloat((card.prices.market*EUR_TO_CAD).toFixed(2));
+    return parseFloat(card.prices.tcg_player.market_price);
+  if(card.prices.market&&card.prices.market>0)return parseFloat(card.prices.market);
   return null;
 }
-
-// Get PSA10 price in CAD
-function getPsa10CAD(card){
-  var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
-  return p10?eurToCAD(p10):null;
+function getPriceLabel(card){
+  if(!card||!card.prices)return'—';
+  var cm=card.prices.cardmarket;
+  if(cm&&cm.prices){
+    if(cm.prices.trendPrice&&cm.prices.trendPrice>0)return'CM Trend';
+    if(cm.prices.avg1&&cm.prices.avg1>0)return'CM 1d Avg';
+    if(cm.prices.avg7&&cm.prices.avg7>0)return'CM 7d Avg';
+    if(cm.prices.averageSellPrice&&cm.prices.averageSellPrice>0)return'CM Avg';
+  }
+  if(card.prices.tcg_player&&card.prices.tcg_player.market_price)return'TCGPlayer';
+  return'Market';
 }
 
 var PULL_RATES={
@@ -570,7 +572,7 @@ async function testConnection(){
     var d=await api('cards',{per_page:1,page:1});
     if(d&&(d.data||d.cards||Array.isArray(d))){
       document.getElementById('statusDot').className='status-dot connected';
-      document.getElementById('statusText').textContent='Connected -- prices in CAD (EUR x '+EUR_TO_CAD+') | 244 IR + 153 SIR gem rates loaded';
+      document.getElementById('statusText').textContent='Connected -- Cardmarket prices active | 244 IR + 153 SIR exact gem rates loaded';
     }else throw new Error('no data');
   }catch(e){
     document.getElementById('statusDot').className='status-dot error';
@@ -594,14 +596,14 @@ async function fetchCard(){
     if(ry){var rk={SIR:'special illustration',IR:'illustration rare',HR:'hyper',UR:'ultra rare'};var kw=rk[ry]||ry.toLowerCase();cards=cards.filter(function(c){return(c.rarity||'').toLowerCase().includes(kw)})}
     if(!cards.length){rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">?</div><p>No cards found. Try removing filters.</p></div></div>';return}
     window._searchResults=cards.slice(0,15);
-    rp.innerHTML='<div class="card-results fade-up"><div class="card-results-header"><div>CARD</div><div>SET</div><div>RARITY</div><div>PRICE (CAD)</div><div></div></div>'+
+    rp.innerHTML='<div class="card-results fade-up"><div class="card-results-header"><div>CARD</div><div>SET</div><div>RARITY</div><div>MARKET PRICE</div><div></div></div>'+
       window._searchResults.map(function(card,i){
-        var price=getRawPrice(card);
+        var price=getRawPrice(card);var priceLabel=getPriceLabel(card);
         var sl=(card.set&&card.set.name)||(card.episode&&card.episode.name)||(card.expansion&&card.expansion.name)||'-';
         return'<div class="card-result-row"><div><div class="card-name">'+(card.name||'-')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
           '<div style="font-size:0.8rem;color:var(--muted)">'+sl+'</div>'+
           '<div>'+getRTag(card.rarity)+'</div>'+
-          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.9rem">'+(price?'CA$'+parseFloat(price).toFixed(2):'-')+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.9rem">'+(price?'$'+parseFloat(price).toFixed(2):'-')+'<span style="font-size:0.6rem;color:var(--muted);margin-left:4px">'+priceLabel+'</span></div>'+
           '<div><button class="btn" style="padding:6px 14px;font-size:0.78rem" onclick="selectCard('+i+')">Select</button></div></div>';
       }).join('')+'</div>';
   }catch(e){errEl.textContent='API error: '+e.message;errEl.style.display='block';rp.innerHTML='<div class="price-hero"><div class="empty-state"><div class="empty-icon">!</div><p>Use sliders to run model manually.</p></div></div>'}
@@ -610,9 +612,11 @@ async function fetchCard(){
 function selectCard(i){
   var card=window._searchResults[i];if(!card)return;
   var price=getRawPrice(card);
-  var psa10=getPsa10CAD(card);
+  var psa10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
   var cs=getCS(card.name);document.getElementById('charSlider').value=cs;document.getElementById('charScore').textContent=cs;updateD();
   window._selectedCardPrice=price;window._selectedCardPsa10=psa10;
+  window._selectedCardPriceLabel=getPriceLabel(card);
+  window._selectedCardTcgPrice=(card.prices&&card.prices.tcg_player&&card.prices.tcg_player.market_price)?parseFloat(card.prices.tcg_player.market_price):null;
   window._selectedCardName=card.name;window._selectedCardNumber=card.number||'';window._selectedCardRarity=card.rarity||'';
   var sk=document.getElementById('setSelect').value,ry=document.getElementById('raritySelect').value;
   if(sk&&ry)autoFill(sk,ry);
@@ -627,9 +631,12 @@ function runModel(){
   var market=window._selectedCardPrice||null,psa10Market=window._selectedCardPsa10||null;
   var name=window._selectedCardName||document.getElementById('cardSearch').value||'Card';
   var cardNum=window._selectedCardNumber||'',rarity=window._selectedCardRarity||'';
+  var priceLabel=window._selectedCardPriceLabel||'Market';
+  var tcgPrice=window._selectedCardTcgPrice||null;
   var pred=calcMP(ps,ds),verdict=market?getV(pred,market):null;
   var c=+document.getElementById('charSlider').value,a=+document.getElementById('artSlider').value,u=+document.getElementById('appealSlider').value;
   var gem=getGemRate(name,cardNum,rarity),modelPsa10=calcModelPsa10Price(pred,gem);
+
   var p10Html='';
   if(psa10Market){
     var pv=getPsa10V(psa10Market,modelPsa10),dc=pv.diff<0?'var(--green)':'var(--red)';
@@ -637,25 +644,26 @@ function runModel(){
       '<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:16px">PSA 10 Valuation Analysis</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">'+
         '<div class="scanner-stat"><div class="scanner-stat-label">Gem Rate</div><div class="scanner-stat-val" style="color:var(--blue)">'+(gem*100).toFixed(0)+'%</div></div>'+
-        '<div class="scanner-stat"><div class="scanner-stat-label">PSA 10 Market</div><div class="scanner-stat-val" style="color:var(--accent)">CA$'+psa10Market.toFixed(0)+'</div></div>'+
-        '<div class="scanner-stat"><div class="scanner-stat-label">Model PSA 10</div><div class="scanner-stat-val">CA$'+modelPsa10.toFixed(0)+'</div></div>'+
+        '<div class="scanner-stat"><div class="scanner-stat-label">PSA 10 Market</div><div class="scanner-stat-val" style="color:var(--accent)">$'+psa10Market.toFixed(0)+'</div></div>'+
+        '<div class="scanner-stat"><div class="scanner-stat-label">Model PSA 10</div><div class="scanner-stat-val">$'+modelPsa10.toFixed(0)+'</div></div>'+
       '</div>'+
       '<div class="verdict-row"><span class="verdict-badge '+pv.cls+'">'+pv.text+'</span>'+
       '<span style="font-size:0.85rem;color:var(--muted);margin-left:12px">Market vs Model: <strong style="color:'+dc+'">'+(pv.diff>=0?'+':'')+(pv.diff*100).toFixed(0)+'%</strong></span></div>'+
     '</div>';
   }else{
     p10Html='<div class="breakdown-panel fade-up"><div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:2px;color:var(--muted);margin-bottom:8px">Model PSA 10 Value</div>'+
-      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.5rem;color:var(--accent)">CA$'+modelPsa10.toFixed(0)+'</div>'+
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:2.5rem;color:var(--accent)">$'+modelPsa10.toFixed(0)+'</div>'+
       '<div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Gem rate: '+(gem*100).toFixed(0)+'% -- No PSA 10 market price from API for this card</div></div>';
   }
+
   document.getElementById('resultPanel').innerHTML=
     '<div class="price-hero fade-up">'+
       '<div class="price-hero-label">Model Predicted Raw Price -- '+name+'</div>'+
-      '<div class="price-hero-main">CA$'+pred.toFixed(0)+'</div>'+
-      '<div class="price-hero-range">Range: CA$'+(pred*0.85).toFixed(0)+' to CA$'+(pred*1.15).toFixed(0)+'</div>'+
+      '<div class="price-hero-main">$'+pred.toFixed(0)+'</div>'+
+      '<div class="price-hero-range">Range: $'+(pred*0.85).toFixed(0)+' to $'+(pred*1.15).toFixed(0)+'</div>'+
       '<div class="verdict-row">'+
-        (verdict?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+' (Raw)</span><span style="font-size:0.85rem;color:var(--muted)">Market: <strong style="color:var(--text)">CA$'+market.toFixed(2)+'</strong> - Diff: '+(verdict.diff>=0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>':
-        '<span class="verdict-badge verdict-fair">Raw Model Output</span><span style="font-size:0.85rem;color:var(--muted)">Enter price below for verdict</span>')+
+        (verdict?'<span class="verdict-badge '+verdict.cls+'">'+verdict.text+' (Raw)</span><span style="font-size:0.85rem;color:var(--muted)">'+priceLabel+': <strong style="color:var(--text)">$'+market.toFixed(2)+'</strong> - Diff: '+(verdict.diff>=0?'+':'')+(verdict.diff*100).toFixed(0)+'%</span>':
+        '<span class="verdict-badge verdict-fair">Raw Model Output</span><span style="font-size:0.85rem;color:var(--muted)">Enter raw price below for verdict</span>')+
       '</div>'+
     '</div>'+
     '<div class="metrics-grid fade-up">'+
@@ -670,8 +678,8 @@ function runModel(){
       '<div class="breakdown-row"><div class="breakdown-name">Artwork and Hype (45%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+a*10+'%;background:var(--accent2)"></div></div><div class="breakdown-score">'+a+'/10</div></div>'+
       '<div class="breakdown-row"><div class="breakdown-name">Universal Appeal (10%)</div><div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:'+u*10+'%;background:var(--blue)"></div></div><div class="breakdown-score">'+u+'/10</div></div>'+
       '<div class="divider"></div>'+
-      (market?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>CM Price (CAD)</span><strong style="color:var(--green)">CA$'+market.toFixed(2)+'</strong></div><div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Raw Model (CAD)</span><strong style="color:var(--accent)">CA$'+pred.toFixed(2)+'</strong></div>':
-      '<div class="input-wrap"><label>Enter Price (CAD)</label><div style="display:flex;gap:8px"><input type="number" id="mpi" placeholder="e.g. 380" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMp()">Check</button></div></div>')+
+      (market?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>'+priceLabel+' (primary)</span><strong style="color:var(--green)">$'+market.toFixed(2)+'</strong></div>'+(tcgPrice&&tcgPrice!==market?'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:8px"><span>TCGPlayer market</span><strong style="color:var(--muted)">$'+tcgPrice.toFixed(2)+'</strong></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted)"><span>Raw Model</span><strong style="color:var(--accent)">$'+pred.toFixed(2)+'</strong></div>':
+      '<div class="input-wrap"><label>Enter Raw Market Price</label><div style="display:flex;gap:8px"><input type="number" id="mpi" placeholder="e.g. 120" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.9rem;outline:none;flex:1"><button class="btn" onclick="applyMp()">Check</button></div></div>')+
     '</div>';
 }
 function applyMp(){var mp=parseFloat(document.getElementById('mpi').value);if(!mp)return;window._selectedCardPrice=mp;runModel()}
@@ -695,10 +703,9 @@ async function runScanner(){
         var r=(card.rarity||'').toLowerCase();
         var isIR=r.includes('illustration rare')&&!r.includes('special'),isSIR=r.includes('special illustration');
         if(!isIR&&!isSIR)return;if(rarF==='IR'&&!isIR)return;if(rarF==='SIR'&&!isSIR)return;
-        var p10=getPsa10CAD(card);
+        var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
         if(!p10)return;
         var rp=getRawPrice(card);
-        var cs=getCS(card.name),pr=isSIR?(sd.sir||90):(sd.ir||13),inSet=isSIR?(sd.sirInSet||10):(sd.irInSet||20);
         var ps=calcPCS(pr,inSet).score,ds=calcD(cs,6,cs>7?8:5),mr=calcMP(ps,ds);
         var gem=getGemRate(card.name||'',card.number||'',card.rarity||''),mp10=calcModelPsa10Price(mr,gem);
         _scannerData.push({name:card.name||'-',setName:sn,number:card.number||'',rarity:card.rarity||'',rawPrice:rp,psa10Mkt:p10,modelPsa10:mp10,modelRaw:mr,gemRate:gem,diff:(p10-mp10)/mp10});
@@ -715,7 +722,7 @@ function redrawScanner(){
   if(_sortMode==='diff')s.sort(function(a,b){return a.diff-b.diff});
   else if(_sortMode==='psa10')s.sort(function(a,b){return b.psa10Mkt-a.psa10Mkt});
   else s.sort(function(a,b){return b.gemRate-a.gemRate});
-  if(!s.length){document.getElementById('scannerResults').innerHTML='<div class="empty-state"><div class="empty-icon">?</div><p>No cards with PSA 10 price data from the API.</p></div>';return}
+  if(!s.length){document.getElementById('scannerResults').innerHTML='<div class="empty-state"><div class="empty-icon">?</div><p>No cards with PSA 10 price data from the API. Cardmarket graded prices may not be available for all sets yet.</p></div>';return}
   var under=s.filter(function(c){return c.diff<-0.20}),fair=s.filter(function(c){return c.diff>=-0.20&&c.diff<=0.25}),over=s.filter(function(c){return c.diff>0.25});
   var html='<div style="font-size:0.78rem;color:var(--muted);margin-bottom:20px;font-family:\'DM Mono\',monospace">'+s.length+' cards with PSA 10 data | '+under.length+' undervalued | '+fair.length+' fairly valued | '+over.length+' overvalued</div>';
   if(under.length)html+='<div style="font-family:\'Bebas Neue\',sans-serif;letter-spacing:3px;color:var(--green);font-size:0.9rem;margin-bottom:12px">UNDERVALUED PSA 10 ('+under.length+')</div><div class="scanner-grid" style="margin-bottom:32px">'+under.map(renderCard).join('')+'</div>';
@@ -734,8 +741,8 @@ function renderCard(c){
     '<div style="display:flex;justify-content:space-between;margin-bottom:3px"><div class="scanner-card-name">'+c.name+'</div>'+getRTag(c.rarity)+'</div>'+
     '<div class="scanner-card-set">'+c.setName+(c.number?' #'+c.number:'')+'</div>'+
     '<div class="scanner-stats">'+
-      '<div class="scanner-stat"><div class="scanner-stat-label">PSA 10 Mkt</div><div class="scanner-stat-val" style="color:var(--accent)">CA$'+c.psa10Mkt.toFixed(0)+'</div></div>'+
-      '<div class="scanner-stat"><div class="scanner-stat-label">Model PSA 10</div><div class="scanner-stat-val">CA$'+c.modelPsa10.toFixed(0)+'</div></div>'+
+      '<div class="scanner-stat"><div class="scanner-stat-label">PSA 10 Mkt</div><div class="scanner-stat-val" style="color:var(--accent)">$'+c.psa10Mkt.toFixed(0)+'</div></div>'+
+      '<div class="scanner-stat"><div class="scanner-stat-label">Model PSA 10</div><div class="scanner-stat-val">$'+c.modelPsa10.toFixed(0)+'</div></div>'+
       '<div class="scanner-stat"><div class="scanner-stat-label">Gem Rate</div><div class="scanner-stat-val" style="color:var(--blue)">'+(c.gemRate*100).toFixed(0)+'%</div></div>'+
     '</div>'+
     '<div class="diff-bar-wrap"><div class="diff-bar" style="width:'+bw+'%;background:'+bc+'"></div></div>'+
@@ -743,7 +750,7 @@ function renderCard(c){
       '<span class="verdict-badge '+vcls+'" style="font-size:0.75rem;padding:5px 12px">'+vt+'</span>'+
       '<span style="font-family:\'DM Mono\',monospace;font-size:0.78rem;color:'+vc+'">'+(c.diff>=0?'+':'')+(c.diff*100).toFixed(0)+'% vs model</span>'+
     '</div>'+
-    (c.rawPrice?'<div style="font-size:0.7rem;color:var(--muted);margin-top:8px">Raw: CA$'+c.rawPrice.toFixed(0)+' - Model Raw: CA$'+c.modelRaw.toFixed(0)+'</div>':'')+
+    (c.rawPrice?'<div style="font-size:0.7rem;color:var(--muted);margin-top:8px">Raw: $'+c.rawPrice.toFixed(0)+' - Model Raw: $'+c.modelRaw.toFixed(0)+'</div>':'')+
   '</div>';
 }
 
@@ -758,10 +765,10 @@ async function browseSet(){
     cards=cards.filter(function(card){var r=(card.rarity||'').toLowerCase();return r.includes('illustration')||r.includes('hyper')||r.includes('ultra rare')||r.includes('special')});
     if(!cards.length){c.innerHTML='<div class="empty-state"><p>No chase cards found.</p></div>';return}
     c.innerHTML='<div class="card-results fade-up">'+
-      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>RAW (CAD)</div><div>PSA 10 (CAD)</div><div>PSA 10 VERDICT</div></div>'+
+      '<div style="padding:12px 20px;border-bottom:1px solid var(--border);font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--muted);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:12px"><div>CARD</div><div>RARITY</div><div>RAW MKT</div><div>PSA 10 MKT</div><div>PSA 10 VERDICT</div></div>'+
       cards.slice(0,25).map(function(card){
         var rp=getRawPrice(card);
-        var p10=getPsa10CAD(card);
+        var p10=card.prices&&card.prices.cardmarket&&card.prices.cardmarket.graded&&card.prices.cardmarket.graded.psa&&card.prices.cardmarket.graded.psa.psa10?parseFloat(card.prices.cardmarket.graded.psa.psa10):null;
         var cs=getCS(card.name),r=(card.rarity||'').toLowerCase(),isSIR=r.includes('special illustration');
         var pr=isSIR?(sd.sir||90):(r.includes('hyper')?(sd.hr||150):(sd.ir||13));
         var inSet=isSIR?(sd.sirInSet||10):(r.includes('hyper')?(sd.hrInSet||5):(sd.irInSet||20));
@@ -772,8 +779,8 @@ async function browseSet(){
         return'<div class="card-result-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">'+
           '<div><div class="card-name">'+(card.name||'-')+'</div><div class="card-set-label">'+(card.number?'#'+card.number:'')+'</div></div>'+
           '<div>'+getRTag(card.rarity)+'</div>'+
-          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.88rem">'+(rp?'CA$'+rp.toFixed(2):'-')+'</div>'+
-          '<div style="font-family:\'DM Mono\',monospace;color:var(--accent);font-size:0.88rem">'+(p10?'CA$'+p10.toFixed(2):'-')+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--green);font-size:0.88rem">'+(rp?'$'+rp.toFixed(2):'-')+'</div>'+
+          '<div style="font-family:\'DM Mono\',monospace;color:var(--accent);font-size:0.88rem">'+(p10?'$'+p10.toFixed(2):'-')+'</div>'+
           '<div>'+vd+'</div></div>';
       }).join('')+'</div>';
   }catch(e){c.innerHTML='<div class="error-msg">Error: '+e.message+'</div>'}
