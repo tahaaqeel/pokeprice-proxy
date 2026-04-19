@@ -4,29 +4,26 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { endpoint, ...params } = req.query;
+  const { endpoint, name, episode, page, per_page } = req.query;
   if (!endpoint) return res.status(400).json({ error: 'Missing endpoint' });
 
-  // Strip internal params not needed by pokemontcg.io
-  const { episode, sort, ...apiParams } = params;
-
-  // Build query string
+  // Build search query
   const q = [];
-  if (apiParams.name) q.push(`name:"${apiParams.name}"`);
-  if (episode) q.push(`set.name:"${episode}"`);
+  if (name) q.push(name);
+  if (episode) q.push(episode);
 
   const queryParams = new URLSearchParams();
+  queryParams.set('game', 'pokemon');
   if (q.length) queryParams.set('q', q.join(' '));
-  if (apiParams.page) queryParams.set('page', apiParams.page);
-  if (apiParams.per_page) queryParams.set('pageSize', apiParams.per_page);
-  if (sort) queryParams.set('orderBy', sort === 'number' ? 'number' : '-set.releaseDate');
+  if (page) queryParams.set('offset', (parseInt(page) - 1) * parseInt(per_page || 20));
+  if (per_page) queryParams.set('limit', per_page);
 
-  const url = `https://api.pokemontcg.io/v2/${endpoint}?${queryParams}`;
+  const url = `https://api.tcgpricelookup.com/v1/cards/search?${queryParams}`;
 
   try {
     const response = await fetch(url, {
       headers: {
-        'X-Api-Key': process.env.PTCG_API_KEY || '',
+        'X-API-Key': process.env.TCGPL_API_KEY || '',
         'Content-Type': 'application/json'
       }
     });
